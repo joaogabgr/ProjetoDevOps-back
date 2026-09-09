@@ -29,4 +29,12 @@ git commit -m "SCRUM-31 feat: emulador de envio de leituras"
 
 O título do Pull Request também deve começar com a chave.
 
-Prefixos de commit: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`.
+### Padrões de commit
+
+| Prefixo | Uso |
+|---------|-----|
+| feat | Usado para criação de nova funcionalidade; |
+| fix | Usado para corrigir algum problema no código e/ou funcionalidade (bugs); |
+| refactor | Usado para refatoração de código sem alterar sua funcionalidade, apenas melhoria; |
+| docs | Usado para atualizar documentações como o arquivo README.md; |
+| style | Usado para atualizar estilos e arquivos de estilização; |
