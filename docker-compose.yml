@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tecsus-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-tecsus}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tecsus}
+      POSTGRES_DB: ${DB_NAME:-tecsus}
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USER:-tecsus} -d ${DB_NAME:-tecsus}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  postgres-data:
