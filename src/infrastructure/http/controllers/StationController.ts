@@ -37,10 +37,11 @@ export class StationController {
   list = async (req: Request, res: Response): Promise<void> => {
     const query = listStationsQuerySchema.parse(req.query);
     const result = await this.listStations.execute(query);
+    const totalPages = result.total === 0 ? 0 : Math.ceil(result.total / result.perPage);
 
     res.status(200).json({
       data: result.items,
-      meta: { total: result.total, page: result.page, perPage: result.perPage },
+      meta: { total: result.total, page: result.page, perPage: result.perPage, totalPages },
     });
   };
 
