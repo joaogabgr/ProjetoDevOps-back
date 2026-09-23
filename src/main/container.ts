@@ -5,14 +5,19 @@ import { GetStationUseCase } from '../application/use-cases/station/GetStationUs
 import { ListStationsUseCase } from '../application/use-cases/station/ListStationsUseCase';
 import { UpdateStationUseCase } from '../application/use-cases/station/UpdateStationUseCase';
 import { ListTypeParametersUseCase } from '../application/use-cases/type-parameter/ListTypeParametersUseCase';
+import { CreateUserUseCase } from '../application/use-cases/user/CreateUserUseCase';
 import { TypeOrmStationRepository } from '../infrastructure/database/repositories/TypeOrmStationRepository';
 import { TypeOrmTypeParameterRepository } from '../infrastructure/database/repositories/TypeOrmTypeParameterRepository';
+import { TypeOrmUserRepository } from '../infrastructure/database/repositories/TypeOrmUserRepository';
 import { StationController } from '../infrastructure/http/controllers/StationController';
 import { TypeParameterController } from '../infrastructure/http/controllers/TypeParameterController';
+import { UserController } from '../infrastructure/http/controllers/UserController';
+import { BcryptPasswordHasher } from '../infrastructure/security/BcryptPasswordHasher';
 
 export interface Container {
   readonly stationController: StationController;
   readonly typeParameterController: TypeParameterController;
+  readonly userController: UserController;
 }
 
 /**
@@ -37,5 +42,9 @@ export function buildContainer(dataSource: DataSource): Container {
     new ListTypeParametersUseCase(typeParameterRepository),
   );
 
-  return { stationController, typeParameterController };
+  const userRepository = new TypeOrmUserRepository(dataSource);
+  const passwordHasher = new BcryptPasswordHasher();
+  const userController = new UserController(new CreateUserUseCase(userRepository, passwordHasher));
+
+  return { stationController, typeParameterController, userController };
 }
