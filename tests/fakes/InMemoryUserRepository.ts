@@ -1,7 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { User } from '../../src/domain/entities/User';
 import { UserRole } from '../../src/domain/enums/UserRole';
-import type { CreateUserData, UserRepository } from '../../src/domain/repositories/UserRepository';
+import { NotFoundError } from '../../src/domain/errors/DomainError';
+import type {
+  CreateUserData,
+  UpdateUserData,
+  UserRepository,
+} from '../../src/domain/repositories/UserRepository';
 
 /** Implementação em memória da porta `UserRepository`, usada só em teste. */
 export class InMemoryUserRepository implements UserRepository {
@@ -25,6 +30,16 @@ export class InMemoryUserRepository implements UserRepository {
     user.active = true;
 
     this.users.set(user.id, user);
+    return user;
+  }
+
+  async update(id: string, data: UpdateUserData): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new NotFoundError('Usuário', id);
+    }
+
+    Object.assign(user, data);
     return user;
   }
 
