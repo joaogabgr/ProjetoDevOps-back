@@ -6,6 +6,7 @@ import { ListStationsUseCase } from '../application/use-cases/station/ListStatio
 import { UpdateStationUseCase } from '../application/use-cases/station/UpdateStationUseCase';
 import { ListTypeParametersUseCase } from '../application/use-cases/type-parameter/ListTypeParametersUseCase';
 import { CreateUserUseCase } from '../application/use-cases/user/CreateUserUseCase';
+import { UpdateUserUseCase } from '../application/use-cases/user/UpdateUserUseCase';
 import { TypeOrmStationRepository } from '../infrastructure/database/repositories/TypeOrmStationRepository';
 import { TypeOrmTypeParameterRepository } from '../infrastructure/database/repositories/TypeOrmTypeParameterRepository';
 import { TypeOrmUserRepository } from '../infrastructure/database/repositories/TypeOrmUserRepository';
@@ -44,7 +45,10 @@ export function buildContainer(dataSource: DataSource): Container {
 
   const userRepository = new TypeOrmUserRepository(dataSource);
   const passwordHasher = new BcryptPasswordHasher();
-  const userController = new UserController(new CreateUserUseCase(userRepository, passwordHasher));
+  const userController = new UserController(
+    new CreateUserUseCase(userRepository, passwordHasher),
+    new UpdateUserUseCase(userRepository),
+  );
 
   return { stationController, typeParameterController, userController };
 }
