@@ -19,4 +19,24 @@ export const createUserBodySchema = z.object({
   }),
 });
 
+export const updateUserBodySchema = z
+  .object({
+    name: z.string().trim().min(3, 'O nome deve ter ao menos 3 caracteres.').max(255).optional(),
+    email: z.string().trim().toLowerCase().email('E-mail inválido.').max(255).optional(),
+    role: z
+      .nativeEnum(UserRole, {
+        errorMap: () => ({
+          message: `role deve ser um dos valores: ${Object.values(UserRole).join(', ')}.`,
+        }),
+      })
+      .optional(),
+    active: z.boolean().optional(),
+  })
+  .refine((body) => Object.keys(body).length > 0, 'Informe ao menos um campo para atualizar.');
+
+export const userIdParamsSchema = z.object({
+  id: z.string().uuid('Id de usuário inválido.'),
+});
+
 export type CreateUserBody = z.infer<typeof createUserBodySchema>;
+export type UpdateUserBody = z.infer<typeof updateUserBodySchema>;
