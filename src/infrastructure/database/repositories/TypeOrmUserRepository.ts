@@ -1,9 +1,11 @@
-import type { DataSource, Repository } from 'typeorm';
+import { ILike, type DataSource, type FindOptionsWhere, type Repository } from 'typeorm';
 import { User } from '../../../domain/entities/User';
 import { NotFoundError } from '../../../domain/errors/DomainError';
+import type { Paginated } from '../../../domain/repositories/StationRepository';
 import type {
   CreateUserData,
   UpdateUserData,
+  UserListFilters,
   UserRepository,
 } from '../../../domain/repositories/UserRepository';
 import { UserSchema } from '../schemas';
@@ -53,6 +55,21 @@ export class TypeOrmUserRepository implements UserRepository {
 
   async findByCpf(cpf: string): Promise<User | null> {
     return this.repository.findOne({ where: { cpf } });
+  }
+
+  async list(filters: UserListFilters): Promise<Paginated<User>> {
+    const where: FindOptionsWhere<User> = {};
+    if (filters.role) where.role = filters.role;
+    if (filters.name) where.name = ILike(`%${filters.name}%`);
+
+    const [items, total] = await this.repository.findAndCount({
+      where,
+      order: { name: 'ASC' },
+      skip: (filters.page - 1) * filters.perPage,
+      take: filters.perPage,
+    });
+
+    return { items, total, page: filters.page, perPage: filters.perPage };
   }
 }
 
