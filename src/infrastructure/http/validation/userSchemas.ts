@@ -38,5 +38,17 @@ export const userIdParamsSchema = z.object({
   id: z.string().uuid('Id de usuário inválido.'),
 });
 
+export const listUsersQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  perPage: z.coerce.number().int().positive().max(100).default(20),
+  role: z
+    .nativeEnum(UserRole, {
+      errorMap: () => ({ message: `role deve ser um dos valores: ${Object.values(UserRole).join(', ')}.` }),
+    })
+    .optional(),
+  name: z.string().trim().min(1).optional(),
+});
+
 export type CreateUserBody = z.infer<typeof createUserBodySchema>;
 export type UpdateUserBody = z.infer<typeof updateUserBodySchema>;
+export type ListUsersQuery = z.infer<typeof listUsersQuerySchema>;
