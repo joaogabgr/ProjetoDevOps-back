@@ -6,7 +6,7 @@
  */
 export class TypeParameter {
   id!: string;
-  /** Chave usada no JSON enviado pela estação, ex.: `temp`, `hum`. */
+  /** Chave usada no JSON enviado pela estação, ex.: `temp`, `umid`, `nivel`. */
   typeJson!: string;
   name!: string;
   unit!: string;

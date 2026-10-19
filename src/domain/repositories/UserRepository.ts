@@ -1,5 +1,15 @@
 import type { User } from '../entities/User';
 import type { UserRole } from '../enums/UserRole';
+import type { Paginated } from './StationRepository';
+
+export interface UserListFilters {
+  readonly page: number;
+  readonly perPage: number;
+  /** Filtra por perfil de acesso. */
+  readonly role?: UserRole;
+  /** Busca parcial por nome, case-insensitive. */
+  readonly name?: string;
+}
 
 export interface CreateUserData {
   readonly name: string;
@@ -37,4 +47,5 @@ export interface UserRepository {
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   findByCpf(cpf: string): Promise<User | null>;
+  list(filters: UserListFilters): Promise<Paginated<User>>;
 }
