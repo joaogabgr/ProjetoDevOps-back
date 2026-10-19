@@ -49,6 +49,10 @@ export class InMemoryUserRepository implements UserRepository {
     this.users.delete(id);
   }
 
+  async countActiveAdmins(): Promise<number> {
+    return [...this.users.values()].filter((user) => user.role === UserRole.ADMIN && user.active).length;
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.users.get(id) ?? null;
   }

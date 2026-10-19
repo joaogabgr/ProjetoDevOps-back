@@ -45,6 +45,8 @@ export interface UserRepository {
   create(data: CreateUserData): Promise<User>;
   update(id: string, data: UpdateUserData): Promise<User>;
   delete(id: string): Promise<void>;
+  /** Quantos administradores ativos existem — o sistema nunca pode ficar sem nenhum. */
+  countActiveAdmins(): Promise<number>;
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
   findByCpf(cpf: string): Promise<User | null>;

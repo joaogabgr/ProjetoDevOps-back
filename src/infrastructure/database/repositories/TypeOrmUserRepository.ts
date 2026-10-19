@@ -1,5 +1,6 @@
 import { ILike, type DataSource, type FindOptionsWhere, type Repository } from 'typeorm';
 import { User } from '../../../domain/entities/User';
+import { UserRole } from '../../../domain/enums/UserRole';
 import { NotFoundError } from '../../../domain/errors/DomainError';
 import type { Paginated } from '../../../domain/repositories/StationRepository';
 import type {
@@ -47,6 +48,10 @@ export class TypeOrmUserRepository implements UserRepository {
 
   async delete(id: string): Promise<void> {
     await this.repository.delete({ id });
+  }
+
+  async countActiveAdmins(): Promise<number> {
+    return this.repository.count({ where: { role: UserRole.ADMIN, active: true } });
   }
 
   async findById(id: string): Promise<User | null> {
