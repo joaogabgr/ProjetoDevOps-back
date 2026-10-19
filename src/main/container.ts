@@ -4,6 +4,7 @@ import { DeleteStationUseCase } from '../application/use-cases/station/DeleteSta
 import { GetStationUseCase } from '../application/use-cases/station/GetStationUseCase';
 import { ListStationsUseCase } from '../application/use-cases/station/ListStationsUseCase';
 import { UpdateStationUseCase } from '../application/use-cases/station/UpdateStationUseCase';
+import { CreateTypeParameterUseCase } from '../application/use-cases/type-parameter/CreateTypeParameterUseCase';
 import { ListTypeParametersUseCase } from '../application/use-cases/type-parameter/ListTypeParametersUseCase';
 import { CreateUserUseCase } from '../application/use-cases/user/CreateUserUseCase';
 import { ListUsersUseCase } from '../application/use-cases/user/ListUsersUseCase';
@@ -42,6 +43,7 @@ export function buildContainer(dataSource: DataSource): Container {
 
   const typeParameterController = new TypeParameterController(
     new ListTypeParametersUseCase(typeParameterRepository),
+    new CreateTypeParameterUseCase(typeParameterRepository),
   );
 
   const userRepository = new TypeOrmUserRepository(dataSource);
