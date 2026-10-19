@@ -1,9 +1,27 @@
 import { TypeParameter } from '../../src/domain/entities/TypeParameter';
-import type { TypeParameterRepository } from '../../src/domain/repositories/TypeParameterRepository';
+import type {
+  CreateTypeParameterData,
+  TypeParameterRepository,
+} from '../../src/domain/repositories/TypeParameterRepository';
 
 /** Implementação em memória da porta `TypeParameterRepository`, usada só em teste. */
 export class InMemoryTypeParameterRepository implements TypeParameterRepository {
   constructor(private readonly typeParameters: TypeParameter[] = []) {}
+
+  async create(data: CreateTypeParameterData): Promise<TypeParameter> {
+    const nextId = Math.max(0, ...this.typeParameters.map((tp) => Number(tp.id))) + 1;
+    const typeParameter = buildTypeParameter({ ...data, id: String(nextId), factor: 1, offset: 0 });
+    this.typeParameters.push(typeParameter);
+    return typeParameter;
+  }
+
+  async findByTypeJson(typeJson: string): Promise<TypeParameter | null> {
+    return this.typeParameters.find((tp) => tp.typeJson === typeJson) ?? null;
+  }
+
+  async findByName(name: string): Promise<TypeParameter | null> {
+    return this.typeParameters.find((tp) => tp.name === name) ?? null;
+  }
 
   /** Mesma ordem do adaptador TypeORM: por nome. */
   async findAll(): Promise<TypeParameter[]> {
