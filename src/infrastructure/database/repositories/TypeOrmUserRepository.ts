@@ -45,6 +45,10 @@ export class TypeOrmUserRepository implements UserRepository {
     return updated;
   }
 
+  async delete(id: string): Promise<void> {
+    await this.repository.delete({ id });
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.repository.findOne({ where: { id } });
   }

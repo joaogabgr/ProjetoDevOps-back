@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import type { CreateUserUseCase } from '../../../application/use-cases/user/CreateUserUseCase';
+import type { DeleteUserUseCase } from '../../../application/use-cases/user/DeleteUserUseCase';
 import type { ListUsersUseCase } from '../../../application/use-cases/user/ListUsersUseCase';
 import type { UpdateUserUseCase } from '../../../application/use-cases/user/UpdateUserUseCase';
 import {
@@ -14,6 +15,7 @@ export class UserController {
     private readonly createUser: CreateUserUseCase,
     private readonly updateUser: UpdateUserUseCase,
     private readonly listUsers: ListUsersUseCase,
+    private readonly deleteUser: DeleteUserUseCase,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -40,5 +42,12 @@ export class UserController {
     const user = await this.updateUser.execute(id, body);
 
     res.status(200).json({ data: user });
+  };
+
+  remove = async (req: Request, res: Response): Promise<void> => {
+    const { id } = userIdParamsSchema.parse(req.params);
+    await this.deleteUser.execute(id);
+
+    res.status(204).send();
   };
 }

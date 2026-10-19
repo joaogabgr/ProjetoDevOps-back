@@ -6,6 +6,7 @@ import { ListStationsUseCase } from '../application/use-cases/station/ListStatio
 import { UpdateStationUseCase } from '../application/use-cases/station/UpdateStationUseCase';
 import { ListTypeParametersUseCase } from '../application/use-cases/type-parameter/ListTypeParametersUseCase';
 import { CreateUserUseCase } from '../application/use-cases/user/CreateUserUseCase';
+import { DeleteUserUseCase } from '../application/use-cases/user/DeleteUserUseCase';
 import { ListUsersUseCase } from '../application/use-cases/user/ListUsersUseCase';
 import { UpdateUserUseCase } from '../application/use-cases/user/UpdateUserUseCase';
 import { TypeOrmStationRepository } from '../infrastructure/database/repositories/TypeOrmStationRepository';
@@ -50,6 +51,7 @@ export function buildContainer(dataSource: DataSource): Container {
     new CreateUserUseCase(userRepository, passwordHasher),
     new UpdateUserUseCase(userRepository),
     new ListUsersUseCase(userRepository),
+    new DeleteUserUseCase(userRepository),
   );
 
   return { stationController, typeParameterController, userController };
