@@ -70,7 +70,12 @@ const { issues } = await jira('POST', '/rest/api/3/search/jql', {
   fields: ['summary', 'issuetype', 'parent'],
   maxResults: 100,
 });
-const stories = issues.filter((i) => i.fields.issuetype.name !== 'Epic');
+// Só entram histórias ligadas a um requisito (épico RF). Tarefas técnicas ficam no link de mudanças técnicas.
+const stories = issues.filter((i) => i.fields.issuetype.name !== 'Epic' && /^RF\d+/.test(i.fields.parent?.fields?.summary ?? ''));
+if (!stories.length) {
+  console.log('Nenhuma história de requisito nos commits. Release não criada.');
+  return;
+}
 const groups = new Map();
 for (const i of stories) {
   const rf = i.fields.parent?.fields?.summary ?? 'Outras entregas';
