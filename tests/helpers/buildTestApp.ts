@@ -24,13 +24,12 @@ import { InMemoryUserRepository } from '../fakes/InMemoryUserRepository';
 export function buildTestApp(
   stationRepository = new InMemoryStationRepository(),
   userRepository = new InMemoryUserRepository(),
+  typeParameterRepository = new InMemoryTypeParameterRepository(),
 ): {
   app: Express;
   stationRepository: InMemoryStationRepository;
   userRepository: InMemoryUserRepository;
 } {
-  const typeParameterRepository = new InMemoryTypeParameterRepository();
-
   const container: Container = {
     stationController: new StationController(
       new CreateStationUseCase(stationRepository, typeParameterRepository),
