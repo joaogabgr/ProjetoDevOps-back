@@ -1,0 +1,47 @@
+name: Release
+
+# A cada promoção para a main: cria a tag e a release agrupada por requisito
+# e marca a versão nas issues do Jira.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Criar release e versão no Jira
+        run: node .github/scripts/release.mjs
+        env:
+          COMPONENT: back
+          GH_TOKEN: ${{ github.token }}
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+
+      # Pede ao repo principal para atualizar o ENTREGAS.md na hora.
+      # Sem o secret, a página é atualizada pelo agendamento diário.
+      - name: Avisar o repo principal
+        if: ${{ env.DISPATCH_TOKEN != '' }}
+        run: gh api repos/joaogabgr/ProjetoDevOps/dispatches -f event_type=release-publicada
+        env:
+          DISPATCH_TOKEN: ${{ secrets.PROJETO_DISPATCH_TOKEN }}
+          GH_TOKEN: ${{ secrets.PROJETO_DISPATCH_TOKEN }}
