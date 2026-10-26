@@ -2,9 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { User } from '../../src/domain/entities/User';
 import { UserRole } from '../../src/domain/enums/UserRole';
 import { NotFoundError } from '../../src/domain/errors/DomainError';
+import type { Paginated } from '../../src/domain/repositories/StationRepository';
 import type {
   CreateUserData,
   UpdateUserData,
+  UserListFilters,
   UserRepository,
 } from '../../src/domain/repositories/UserRepository';
 
@@ -43,6 +45,14 @@ export class InMemoryUserRepository implements UserRepository {
     return user;
   }
 
+  async delete(id: string): Promise<void> {
+    this.users.delete(id);
+  }
+
+  async countActiveAdmins(): Promise<number> {
+    return [...this.users.values()].filter((user) => user.role === UserRole.ADMIN && user.active).length;
+  }
+
   async findById(id: string): Promise<User | null> {
     return this.users.get(id) ?? null;
   }
@@ -53,6 +63,22 @@ export class InMemoryUserRepository implements UserRepository {
 
   async findByCpf(cpf: string): Promise<User | null> {
     return [...this.users.values()].find((user) => user.cpf === cpf) ?? null;
+  }
+
+  async list(filters: UserListFilters): Promise<Paginated<User>> {
+    const name = filters.name?.toLowerCase();
+    const filtered = [...this.users.values()]
+      .filter((user) => !filters.role || user.role === filters.role)
+      .filter((user) => !name || user.name.toLowerCase().includes(name))
+      .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
+
+    const start = (filters.page - 1) * filters.perPage;
+    return {
+      items: filtered.slice(start, start + filters.perPage),
+      total: filtered.length,
+      page: filters.page,
+      perPage: filters.perPage,
+    };
   }
 }
 
