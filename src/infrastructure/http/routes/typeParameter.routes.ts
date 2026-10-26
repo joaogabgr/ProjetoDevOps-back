@@ -5,6 +5,7 @@ export function buildTypeParameterRoutes(controller: TypeParameterController): R
   const router = Router();
 
   router.get('/', controller.list);
+  router.post('/', controller.create);
 
   return router;
 }
