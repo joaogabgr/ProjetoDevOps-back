@@ -38,10 +38,11 @@ const commits = sh('git', ['log', range, '--format=%s%x1f%b%x1e'])
   .split('\x1e').map((c) => c.trim()).filter(Boolean)
   .map((c) => { const [subject, body = ''] = c.split('\x1f'); return { subject, body }; });
 
-// 2. Chaves do Jira: na mensagem do commit ou, se faltar, no título e na branch do PR (#N)
+// 2. Chaves do Jira: no título do commit e no título e na branch do PR (#N).
+// O corpo fica de fora: ele traz a descrição do PR, que pode citar outras issues ("depende do SCRUM-26").
 const keys = new Set();
-for (const { subject, body } of commits) {
-  for (const k of `${subject}\n${body}`.match(KEY_RE) ?? []) keys.add(k);
+for (const { subject } of commits) {
+  for (const k of subject.match(KEY_RE) ?? []) keys.add(k);
   const pr = subject.match(/\(#(\d+)\)\s*$/)?.[1];
   if (pr) {
     const info = shOrNull('gh', ['api', `repos/${GITHUB_REPOSITORY}/pulls/${pr}`, '--jq', '.title + " " + .head.ref']);
