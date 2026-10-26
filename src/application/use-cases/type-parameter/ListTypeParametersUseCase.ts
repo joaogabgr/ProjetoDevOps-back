@@ -21,7 +21,7 @@ export class ListTypeParametersUseCase {
   }
 }
 
-function toTypeParameterDTO(typeParameter: TypeParameter): TypeParameterDTO {
+export function toTypeParameterDTO(typeParameter: TypeParameter): TypeParameterDTO {
   return {
     id: typeParameter.id,
     typeJson: typeParameter.typeJson,

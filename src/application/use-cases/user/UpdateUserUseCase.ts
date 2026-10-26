@@ -24,6 +24,11 @@ export class UpdateUserUseCase {
       throw new NotFoundError('Usuário', id);
     }
 
+    const deactivating = input.active === false && current.active;
+    if (deactivating && current.isAdmin() && (await this.users.countActiveAdmins()) <= 1) {
+      throw new ConflictError('Não é possível desativar o último administrador ativo.');
+    }
+
     const email = input.email ? input.email.trim().toLowerCase() : undefined;
 
     if (email && email !== current.email) {

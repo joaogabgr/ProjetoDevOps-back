@@ -1,6 +1,9 @@
 import { In, type DataSource, type Repository } from 'typeorm';
 import { TypeParameter } from '../../../domain/entities/TypeParameter';
-import type { TypeParameterRepository } from '../../../domain/repositories/TypeParameterRepository';
+import type {
+  CreateTypeParameterData,
+  TypeParameterRepository,
+} from '../../../domain/repositories/TypeParameterRepository';
 import { TypeParameterSchema } from '../schemas';
 
 export class TypeOrmTypeParameterRepository implements TypeParameterRepository {
@@ -8,6 +11,19 @@ export class TypeOrmTypeParameterRepository implements TypeParameterRepository {
 
   constructor(dataSource: DataSource) {
     this.repository = dataSource.getRepository(TypeParameterSchema);
+  }
+
+  async create(data: CreateTypeParameterData): Promise<TypeParameter> {
+    const typeParameter = this.repository.create({ ...data, factor: 1, offset: 0 });
+    return this.repository.save(typeParameter);
+  }
+
+  async findByTypeJson(typeJson: string): Promise<TypeParameter | null> {
+    return this.repository.findOne({ where: { typeJson } });
+  }
+
+  async findByName(name: string): Promise<TypeParameter | null> {
+    return this.repository.findOne({ where: { name } });
   }
 
   async findAll(): Promise<TypeParameter[]> {
