@@ -23,14 +23,24 @@ describe('DELETE /api/type-parameters/:id (SCRUM-71 — RF3: excluir parâmetro)
     expect(list.body.data.map((tp: { typeJson: string }) => tp.typeJson)).not.toContain('pressao');
   });
 
-  it('recusa excluir parâmetro instalado em estações', async () => {
+  it('CA4: recusa excluir parâmetro com leituras', async () => {
+    const { app, typeParameters } = setup();
+    typeParameters.recordMeasures('6', 2592);
+
+    const response = await request(app).delete('/api/type-parameters/6').set(asAdmin);
+
+    expect(response.status).toBe(409);
+    expect(response.body.error.message).toBe('Parâmetro com leituras não pode ser excluído.');
+  });
+
+  it('R5: parâmetro instalado mas sem leituras é desligado das estações e excluído', async () => {
     const { app, typeParameters } = setup();
     typeParameters.linkToStations('7', 2);
 
     const response = await request(app).delete('/api/type-parameters/7').set(asAdmin);
 
-    expect(response.status).toBe(409);
-    expect(response.body.error.message).toBe('Parâmetro instalado em estações não pode ser excluído.');
+    expect(response.status).toBe(204);
+    expect(await typeParameters.countStationLinks('7')).toBe(0);
   });
 
   it('404 para parâmetro inexistente', async () => {
