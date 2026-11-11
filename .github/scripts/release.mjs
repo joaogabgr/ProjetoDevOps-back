@@ -66,14 +66,20 @@ else if (lastTag) {
 const tag = `v${version}`;
 
 // 4. Histórias no Jira, agrupadas pelo épico (RF).
-// A branch é da subtarefa ([BACK]/[FRONT]); quem entra na release é a história dona dela.
+// A branch é da tarefa [BACK]/[FRONT]; quem entra na release é a história de que ela "faz parte"
+// (link Composição). Subtarefas antigas sobem para a história pai.
 const search = async (keyList) => (await jira('POST', '/rest/api/3/search/jql', {
   jql: `key in (${keyList.join(',')})`,
-  fields: ['summary', 'issuetype', 'parent'],
+  fields: ['summary', 'issuetype', 'parent', 'issuelinks'],
   maxResults: 100,
 })).issues;
 const found = await search([...keys]);
-const storyKeys = new Set(found.map((i) => (i.fields.issuetype.subtask ? i.fields.parent.key : i.key)));
+const storyOf = (i) => {
+  if (i.fields.issuetype.subtask) return i.fields.parent.key;
+  const partOf = i.fields.issuelinks?.find((l) => l.type.name === 'Composição' && l.outwardIssue);
+  return partOf ? partOf.outwardIssue.key : i.key;
+};
+const storyKeys = new Set(found.map(storyOf));
 // Só entram histórias ligadas a um requisito (épico RF). Tarefas técnicas ficam no link de mudanças técnicas.
 const stories = (await search([...storyKeys]))
   .filter((i) => i.fields.issuetype.name !== 'Epic' && /^RF\d+/.test(i.fields.parent?.fields?.summary ?? ''));
