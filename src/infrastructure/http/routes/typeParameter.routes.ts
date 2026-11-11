@@ -7,6 +7,7 @@ export function buildTypeParameterRoutes(controller: TypeParameterController): R
 
   router.get('/', authorize('VIEW_STATIONS'), controller.list);
   router.post('/', authorize('MANAGE_STATIONS'), controller.create);
+  router.patch('/:id', authorize('MANAGE_STATIONS'), controller.update);
 
   return router;
 }

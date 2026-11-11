@@ -1,8 +1,10 @@
 import { In, type DataSource, type Repository } from 'typeorm';
 import { TypeParameter } from '../../../domain/entities/TypeParameter';
+import { NotFoundError } from '../../../domain/errors/DomainError';
 import type {
   CreateTypeParameterData,
   TypeParameterRepository,
+  UpdateTypeParameterData,
 } from '../../../domain/repositories/TypeParameterRepository';
 import { TypeParameterSchema } from '../schemas';
 
@@ -16,6 +18,19 @@ export class TypeOrmTypeParameterRepository implements TypeParameterRepository {
   async create(data: CreateTypeParameterData): Promise<TypeParameter> {
     const typeParameter = this.repository.create({ ...data, factor: 1, offset: 0 });
     return this.repository.save(typeParameter);
+  }
+
+  async update(id: string, data: UpdateTypeParameterData): Promise<TypeParameter> {
+    const changes = Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined));
+    if (Object.keys(changes).length > 0) {
+      await this.repository.update({ id }, changes);
+    }
+
+    const updated = await this.findById(id);
+    if (!updated) {
+      throw new NotFoundError('Parâmetro', id);
+    }
+    return updated;
   }
 
   async findByTypeJson(typeJson: string): Promise<TypeParameter | null> {

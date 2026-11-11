@@ -8,8 +8,15 @@ export interface CreateTypeParameterData {
   readonly numberOfDecimalCases: number;
 }
 
+export interface UpdateTypeParameterData {
+  readonly name?: string;
+  readonly unit?: string;
+  readonly numberOfDecimalCases?: number;
+}
+
 export interface TypeParameterRepository {
   create(data: CreateTypeParameterData): Promise<TypeParameter>;
+  update(id: string, data: UpdateTypeParameterData): Promise<TypeParameter>;
   findAll(): Promise<TypeParameter[]>;
   findById(id: string): Promise<TypeParameter | null>;
   findByTypeJson(typeJson: string): Promise<TypeParameter | null>;
