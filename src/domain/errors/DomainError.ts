@@ -37,6 +37,24 @@ export class ConflictError extends DomainError {
   }
 }
 
+/** Sem sessão válida: e-mail ou senha errados, ou token ausente, inválido ou vencido. */
+export class UnauthorizedError extends DomainError {
+  readonly code = 'UNAUTHORIZED';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/** Com sessão, mas sem permissão para a ação (RF9 R6). */
+export class ForbiddenError extends DomainError {
+  readonly code = 'FORBIDDEN';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
 /** Os dados recebidos não satisfazem uma regra de negócio. */
 export class ValidationError extends DomainError {
   readonly code = 'VALIDATION_ERROR';

@@ -1,4 +1,5 @@
 import type { DataSource } from 'typeorm';
+import { LoginUseCase } from '../application/use-cases/auth/LoginUseCase';
 import { CreateStationUseCase } from '../application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../application/use-cases/station/DeleteStationUseCase';
 import { GetStationUseCase } from '../application/use-cases/station/GetStationUseCase';
@@ -13,12 +14,16 @@ import { UpdateUserUseCase } from '../application/use-cases/user/UpdateUserUseCa
 import { TypeOrmStationRepository } from '../infrastructure/database/repositories/TypeOrmStationRepository';
 import { TypeOrmTypeParameterRepository } from '../infrastructure/database/repositories/TypeOrmTypeParameterRepository';
 import { TypeOrmUserRepository } from '../infrastructure/database/repositories/TypeOrmUserRepository';
+import { env } from '../infrastructure/config/env';
+import { AuthController } from '../infrastructure/http/controllers/AuthController';
 import { StationController } from '../infrastructure/http/controllers/StationController';
 import { TypeParameterController } from '../infrastructure/http/controllers/TypeParameterController';
 import { UserController } from '../infrastructure/http/controllers/UserController';
 import { BcryptPasswordHasher } from '../infrastructure/security/BcryptPasswordHasher';
+import { JwtTokenService } from '../infrastructure/security/JwtTokenService';
 
 export interface Container {
+  readonly authController: AuthController;
   readonly stationController: StationController;
   readonly typeParameterController: TypeParameterController;
   readonly userController: UserController;
@@ -56,5 +61,8 @@ export function buildContainer(dataSource: DataSource): Container {
     new DeleteUserUseCase(userRepository),
   );
 
-  return { stationController, typeParameterController, userController };
+  const tokenService = new JwtTokenService(env.JWT_SECRET, env.SESSION_HOURS);
+  const authController = new AuthController(new LoginUseCase(userRepository, passwordHasher, tokenService));
+
+  return { authController, stationController, typeParameterController, userController };
 }
