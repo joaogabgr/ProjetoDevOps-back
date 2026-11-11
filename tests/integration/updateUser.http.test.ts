@@ -3,7 +3,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { UserRole } from '../../src/domain/enums/UserRole';
 import { buildUser } from '../fakes/InMemoryUserRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
   it('atualiza o nome e retorna 200 com os dados atualizados', async () => {
@@ -11,7 +11,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
     const user = buildUser({ name: 'Nome Antigo' });
     await userRepository.seed([user]);
 
-    const response = await request(app).patch(`/api/users/${user.id}`).send({ name: 'Nome Novo' });
+    const response = await request(app).patch(`/api/users/${user.id}`).set(asAdmin).send({ name: 'Nome Novo' });
 
     expect(response.status).toBe(200);
     expect(response.body.data.id).toBe(user.id);
@@ -25,6 +25,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
 
     const response = await request(app)
       .patch(`/api/users/${user.id}`)
+      .set(asAdmin)
       .send({ role: UserRole.ADMIN });
 
     expect(response.status).toBe(200);
@@ -36,7 +37,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
     const user = buildUser({ active: true });
     await userRepository.seed([user]);
 
-    const response = await request(app).patch(`/api/users/${user.id}`).send({ active: false });
+    const response = await request(app).patch(`/api/users/${user.id}`).set(asAdmin).send({ active: false });
 
     expect(response.status).toBe(200);
     expect(response.body.data.active).toBe(false);
@@ -49,6 +50,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
 
     const response = await request(app)
       .patch(`/api/users/${user.id}`)
+      .set(asAdmin)
       .send({ name: 'Outro Nome' });
 
     expect(response.status).toBe(200);
@@ -60,6 +62,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
 
     const response = await request(app)
       .patch(`/api/users/${randomUUID()}`)
+      .set(asAdmin)
       .send({ name: 'Não importa' });
 
     expect(response.status).toBe(404);
@@ -69,7 +72,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
   it('retorna 422 quando o id não é um uuid válido', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).patch('/api/users/nao-e-um-uuid').send({ name: 'X' });
+    const response = await request(app).patch('/api/users/nao-e-um-uuid').set(asAdmin).send({ name: 'X' });
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -80,7 +83,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
     const user = buildUser();
     await userRepository.seed([user]);
 
-    const response = await request(app).patch(`/api/users/${user.id}`).send({});
+    const response = await request(app).patch(`/api/users/${user.id}`).set(asAdmin).send({});
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -93,6 +96,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
 
     const response = await request(app)
       .patch(`/api/users/${user.id}`)
+      .set(asAdmin)
       .send({ email: 'não-é-email' });
 
     expect(response.status).toBe(422);
@@ -105,6 +109,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
 
     const response = await request(app)
       .patch(`/api/users/${user.id}`)
+      .set(asAdmin)
       .send({ role: 'SUPER_ADMIN' });
 
     expect(response.status).toBe(422);
@@ -118,6 +123,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
 
     const response = await request(app)
       .patch(`/api/users/${userB.id}`)
+      .set(asAdmin)
       .send({ email: 'usuario.a@tecsus.com' });
 
     expect(response.status).toBe(409);

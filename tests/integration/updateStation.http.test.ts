@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { buildStation } from '../fakes/InMemoryStationRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 describe('PATCH /api/stations/:id (SCRUM-15 — RF2: editar estação meteorológica)', () => {
   it('atualiza o nome da estação e retorna 200 com os dados atualizados', async () => {
@@ -12,6 +12,7 @@ describe('PATCH /api/stations/:id (SCRUM-15 — RF2: editar estação meteoroló
 
     const response = await request(app)
       .patch(`/api/stations/${station.id}`)
+      .set(asAdmin)
       .send({ name: 'Estação Renomeada' });
 
     expect(response.status).toBe(200);
@@ -26,6 +27,7 @@ describe('PATCH /api/stations/:id (SCRUM-15 — RF2: editar estação meteoroló
 
     const response = await request(app)
       .patch(`/api/stations/${station.id}`)
+      .set(asAdmin)
       .send({ latitude: '-22.9068', longitude: '-43.1729' });
 
     expect(response.status).toBe(200);
@@ -39,6 +41,7 @@ describe('PATCH /api/stations/:id (SCRUM-15 — RF2: editar estação meteoroló
 
     const response = await request(app)
       .patch(`/api/stations/${randomUUID()}`)
+      .set(asAdmin)
       .send({ name: 'Não importa' });
 
     expect(response.status).toBe(404);
@@ -48,7 +51,7 @@ describe('PATCH /api/stations/:id (SCRUM-15 — RF2: editar estação meteoroló
   it('retorna 422 quando o id não é um uuid válido', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).patch('/api/stations/nao-e-um-uuid').send({ name: 'X' });
+    const response = await request(app).patch('/api/stations/nao-e-um-uuid').set(asAdmin).send({ name: 'X' });
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -59,7 +62,7 @@ describe('PATCH /api/stations/:id (SCRUM-15 — RF2: editar estação meteoroló
     const station = buildStation();
     await stationRepository.seed([station]);
 
-    const response = await request(app).patch(`/api/stations/${station.id}`).send({});
+    const response = await request(app).patch(`/api/stations/${station.id}`).set(asAdmin).send({});
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -72,6 +75,7 @@ describe('PATCH /api/stations/:id (SCRUM-15 — RF2: editar estação meteoroló
 
     const response = await request(app)
       .patch(`/api/stations/${station.id}`)
+      .set(asAdmin)
       .send({ latitude: '999' });
 
     expect(response.status).toBe(422);
