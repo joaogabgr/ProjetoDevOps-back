@@ -2,13 +2,13 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { UserRole } from '../../src/domain/enums/UserRole';
 import { buildUser } from '../fakes/InMemoryUserRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 describe('GET /api/users (SCRUM-24 — RF5: listar usuários)', () => {
   it('retorna 200 com lista vazia quando não há usuários', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).get('/api/users');
+    const response = await request(app).get('/api/users').set(asAdmin);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual([]);
@@ -22,7 +22,7 @@ describe('GET /api/users (SCRUM-24 — RF5: listar usuários)', () => {
       buildUser({ name: 'Ana', email: 'ana@example.com' }),
     ]);
 
-    const response = await request(app).get('/api/users');
+    const response = await request(app).get('/api/users').set(asAdmin);
 
     expect(response.status).toBe(200);
     expect(response.body.data.map((u: { name: string }) => u.name)).toEqual(['Ana', 'Bruno']);
@@ -41,6 +41,7 @@ describe('GET /api/users (SCRUM-24 — RF5: listar usuários)', () => {
 
     const response = await request(app)
       .get('/api/users')
+      .set(asAdmin)
       .query({ role: UserRole.TECHNICIAN, page: 2, perPage: 2 });
 
     expect(response.status).toBe(200);
@@ -51,7 +52,7 @@ describe('GET /api/users (SCRUM-24 — RF5: listar usuários)', () => {
   it('retorna 422 quando o perfil não existe', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).get('/api/users').query({ role: 'SUPERUSER' });
+    const response = await request(app).get('/api/users').set(asAdmin).query({ role: 'SUPERUSER' });
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');

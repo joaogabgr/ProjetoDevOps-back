@@ -2,7 +2,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { UserRole } from '../../src/domain/enums/UserRole';
 import { buildUser } from '../fakes/InMemoryUserRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
   const validPayload = {
@@ -16,7 +16,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
   it('cadastra o usuário e retorna 201 com Location e sem a senha', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).post('/api/users').send(validPayload);
+    const response = await request(app).post('/api/users').set(asAdmin).send(validPayload);
 
     expect(response.status).toBe(201);
     expect(response.headers.location).toBe(`/api/users/${response.body.data.id}`);
@@ -34,7 +34,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
     const { app } = buildTestApp();
     const { password: _password, ...withoutPassword } = validPayload;
 
-    const response = await request(app).post('/api/users').send(withoutPassword);
+    const response = await request(app).post('/api/users').set(asAdmin).send(withoutPassword);
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
@@ -45,6 +45,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
 
     const response = await request(app)
       .post('/api/users')
+      .set(asAdmin)
       .send({ ...validPayload, email: 'não-é-email' });
 
     expect(response.status).toBe(422);
@@ -53,7 +54,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
   it('retorna 422 quando a senha é menor que 8 caracteres', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).post('/api/users').send({ ...validPayload, password: '123' });
+    const response = await request(app).post('/api/users').set(asAdmin).send({ ...validPayload, password: '123' });
 
     expect(response.status).toBe(422);
   });
@@ -63,6 +64,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
 
     const response = await request(app)
       .post('/api/users')
+      .set(asAdmin)
       .send({ ...validPayload, cpf: '111.444.777-36' });
 
     expect(response.status).toBe(422);
@@ -74,6 +76,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
 
     const response = await request(app)
       .post('/api/users')
+      .set(asAdmin)
       .send({ ...validPayload, role: 'SUPER_ADMIN' });
 
     expect(response.status).toBe(422);
@@ -83,7 +86,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
     const { app, userRepository } = buildTestApp();
     await userRepository.seed([buildUser({ email: 'ana.souza@tecsus.com', cpf: '52998224725' })]);
 
-    const response = await request(app).post('/api/users').send(validPayload);
+    const response = await request(app).post('/api/users').set(asAdmin).send(validPayload);
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('CONFLICT');
@@ -93,7 +96,7 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
     const { app, userRepository } = buildTestApp();
     await userRepository.seed([buildUser({ email: 'outro@tecsus.com', cpf: '11144477735' })]);
 
-    const response = await request(app).post('/api/users').send(validPayload);
+    const response = await request(app).post('/api/users').set(asAdmin).send(validPayload);
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('CONFLICT');
@@ -104,7 +107,7 @@ describe('POST /api/users com perfis do RF5 (SCRUM-74)', () => {
   it('CA1: retorna 422 para agente comunitário sem comunidade', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).post('/api/users').send({
+    const response = await request(app).post('/api/users').set(asAdmin).send({
       name: 'Agente Sem Comunidade',
       email: 'agente@vigia.org',
       password: 'senha-forte',
@@ -121,7 +124,7 @@ describe('POST /api/users com perfis do RF5 (SCRUM-74)', () => {
   it('recusa os perfis antigos', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).post('/api/users').send({
+    const response = await request(app).post('/api/users').set(asAdmin).send({
       name: 'Perfil Antigo',
       email: 'antigo@vigia.org',
       password: 'senha-forte',

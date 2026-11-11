@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { InMemoryStationRepository } from '../fakes/InMemoryStationRepository';
 import { buildBoardTypeParameters, InMemoryTypeParameterRepository } from '../fakes/InMemoryTypeParameterRepository';
 import { InMemoryUserRepository } from '../fakes/InMemoryUserRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 function setup() {
   return buildTestApp(
@@ -28,7 +28,7 @@ describe('POST /api/stations (SCRUM-57 — RF2: cadastrar estação com identifi
   it('cadastra a estação com bioma, comunidade e fuso, ativa e com tempo limite padrão de 60 minutos', async () => {
     const { app } = setup();
 
-    const response = await request(app).post('/api/stations').send(validBody);
+    const response = await request(app).post('/api/stations').set(asAdmin).send(validBody);
 
     expect(response.status).toBe(201);
     expect(response.body.data).toMatchObject({
@@ -46,6 +46,7 @@ describe('POST /api/stations (SCRUM-57 — RF2: cadastrar estação com identifi
 
     const response = await request(app)
       .post('/api/stations')
+      .set(asAdmin)
       .send({ ...validBody, communicationTimeoutMinutes: 180 });
 
     expect(response.status).toBe(201);
@@ -54,9 +55,9 @@ describe('POST /api/stations (SCRUM-57 — RF2: cadastrar estação com identifi
 
   it('CA1: recusa uid repetido com 409 apontando o campo, sem gravar nada', async () => {
     const { app, stationRepository } = setup();
-    await request(app).post('/api/stations').send(validBody).expect(201);
+    await request(app).post('/api/stations').set(asAdmin).send(validBody).expect(201);
 
-    const response = await request(app).post('/api/stations').send({ ...validBody, name: 'Outra' });
+    const response = await request(app).post('/api/stations').set(asAdmin).send({ ...validBody, name: 'Outra' });
 
     expect(response.status).toBe(409);
     expect(response.body.error.details).toEqual([
@@ -71,6 +72,7 @@ describe('POST /api/stations (SCRUM-57 — RF2: cadastrar estação com identifi
 
     const response = await request(app)
       .post('/api/stations')
+      .set(asAdmin)
       .send({ ...validBody, communicationTimeoutMinutes: 10 });
 
     expect(response.status).toBe(422);
@@ -83,7 +85,7 @@ describe('POST /api/stations (SCRUM-57 — RF2: cadastrar estação com identifi
   it('recusa bioma fora da lista', async () => {
     const { app } = setup();
 
-    const response = await request(app).post('/api/stations').send({ ...validBody, biome: 'CAATINGA' });
+    const response = await request(app).post('/api/stations').set(asAdmin).send({ ...validBody, biome: 'CAATINGA' });
 
     expect(response.status).toBe(422);
     expect(response.body.error.details[0].field).toBe('biome');
@@ -92,7 +94,7 @@ describe('POST /api/stations (SCRUM-57 — RF2: cadastrar estação com identifi
   it('recusa fuso que não está no formato IANA', async () => {
     const { app } = setup();
 
-    const response = await request(app).post('/api/stations').send({ ...validBody, timezone: 'GMT-4 Campo Grande' });
+    const response = await request(app).post('/api/stations').set(asAdmin).send({ ...validBody, timezone: 'GMT-4 Campo Grande' });
 
     expect(response.status).toBe(422);
     expect(response.body.error.details[0].field).toBe('timezone');
@@ -102,7 +104,7 @@ describe('POST /api/stations (SCRUM-57 — RF2: cadastrar estação com identifi
     const { app } = setup();
     const { community: _ignored, ...withoutCommunity } = validBody;
 
-    const response = await request(app).post('/api/stations').send(withoutCommunity);
+    const response = await request(app).post('/api/stations').set(asAdmin).send(withoutCommunity);
 
     expect(response.status).toBe(422);
     expect(response.body.error.details[0].field).toBe('community');
