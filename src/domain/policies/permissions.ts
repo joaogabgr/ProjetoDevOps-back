@@ -18,3 +18,8 @@ export const Permission = {
 } as const satisfies Record<string, ReadonlyArray<UserRole>>;
 
 export type Permission = keyof typeof Permission;
+
+/** Perfis que podem executar a ação, para mensagens e testes. */
+export function rolesFor(permission: Permission): ReadonlyArray<UserRole> {
+  return Permission[permission];
+}
