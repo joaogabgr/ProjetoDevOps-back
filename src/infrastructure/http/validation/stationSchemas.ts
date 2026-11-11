@@ -52,6 +52,12 @@ export const updateStationBodySchema = z
     name: z.string().trim().min(3).max(255).optional(),
     latitude: coordinate(-90, 90, 'Latitude').optional(),
     longitude: coordinate(-180, 180, 'Longitude').optional(),
+    biome: biome.optional(),
+    community: community.optional(),
+    timezone: timezone.optional(),
+    communicationTimeoutMinutes: communicationTimeoutMinutes.optional(),
+    // O uid está gravado na placa: trocar aqui desligaria as leituras do cadastro.
+    uuid: z.unknown().refine((value) => value === undefined, 'O identificador não pode ser alterado.'),
   })
   .refine((body) => Object.keys(body).length > 0, 'Informe ao menos um campo para atualizar.');
 
