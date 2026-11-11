@@ -66,6 +66,16 @@ export class TypeOrmStationRepository implements StationRepository {
     return this.repository.findOne({ where: { uuid }, relations: DETAIL_RELATIONS });
   }
 
+  async listCommunities(): Promise<string[]> {
+    const rows = await this.repository
+      .createQueryBuilder('station')
+      .select('DISTINCT station.community', 'community')
+      .orderBy('community', 'ASC')
+      .getRawMany<{ community: string }>();
+
+    return rows.map((row) => row.community);
+  }
+
   async list(filters: StationListFilters): Promise<Paginated<Station>> {
     const [items, total] = await this.repository.findAndCount({
       where: filters.name ? { name: ILike(`%${filters.name}%`) } : {},

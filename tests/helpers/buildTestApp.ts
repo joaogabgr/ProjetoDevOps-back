@@ -5,6 +5,7 @@ import { LoginUseCase } from '../../src/application/use-cases/auth/LoginUseCase'
 import { CreateStationUseCase } from '../../src/application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../../src/application/use-cases/station/DeleteStationUseCase';
 import { GetStationUseCase } from '../../src/application/use-cases/station/GetStationUseCase';
+import { ListCommunitiesUseCase } from '../../src/application/use-cases/station/ListCommunitiesUseCase';
 import { ListStationsUseCase } from '../../src/application/use-cases/station/ListStationsUseCase';
 import { UpdateStationUseCase } from '../../src/application/use-cases/station/UpdateStationUseCase';
 import { CreateTypeParameterUseCase } from '../../src/application/use-cases/type-parameter/CreateTypeParameterUseCase';
@@ -63,6 +64,7 @@ export function buildTestApp(
       new GetStationUseCase(stationRepository),
       new UpdateStationUseCase(stationRepository),
       new DeleteStationUseCase(stationRepository),
+      new ListCommunitiesUseCase(stationRepository),
     ),
     typeParameterController: new TypeParameterController(
       new ListTypeParametersUseCase(typeParameterRepository),

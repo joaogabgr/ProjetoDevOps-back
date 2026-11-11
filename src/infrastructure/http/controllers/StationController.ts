@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import type { CreateStationUseCase } from '../../../application/use-cases/station/CreateStationUseCase';
 import type { DeleteStationUseCase } from '../../../application/use-cases/station/DeleteStationUseCase';
 import type { GetStationUseCase } from '../../../application/use-cases/station/GetStationUseCase';
+import type { ListCommunitiesUseCase } from '../../../application/use-cases/station/ListCommunitiesUseCase';
 import type { ListStationsUseCase } from '../../../application/use-cases/station/ListStationsUseCase';
 import type { UpdateStationUseCase } from '../../../application/use-cases/station/UpdateStationUseCase';
 import {
@@ -25,6 +26,7 @@ export class StationController {
     private readonly getStation: GetStationUseCase,
     private readonly updateStation: UpdateStationUseCase,
     private readonly deleteStation: DeleteStationUseCase,
+    private readonly listCommunities: ListCommunitiesUseCase,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -43,6 +45,10 @@ export class StationController {
       data: result.items,
       meta: { total: result.total, page: result.page, perPage: result.perPage, totalPages },
     });
+  };
+
+  communities = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json({ data: await this.listCommunities.execute() });
   };
 
   getById = async (req: Request, res: Response): Promise<void> => {
