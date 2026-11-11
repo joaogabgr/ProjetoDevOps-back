@@ -15,6 +15,7 @@
     "migration:run": "npm run typeorm -- migration:run",
     "migration:revert": "npm run typeorm -- migration:revert",
     "migration:generate": "npm run typeorm -- migration:generate",
+    "seed:admin": "tsx src/main/seedAdmin.ts",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down"
   },
