@@ -6,6 +6,11 @@ export interface StationListFilters {
   readonly perPage: number;
   /** Busca parcial por nome, case-insensitive. */
   readonly name?: string;
+  readonly biome?: Biome;
+  /** Comunidade exata, como aparece na rota de comunidades. */
+  readonly community?: string;
+  /** `true` só ativas, `false` só desativadas. */
+  readonly active?: boolean;
 }
 
 export interface Paginated<T> {
@@ -36,6 +41,10 @@ export interface UpdateStationData {
   readonly name?: string;
   readonly latitude?: string;
   readonly longitude?: string;
+  readonly biome?: Biome;
+  readonly community?: string;
+  readonly timezone?: string;
+  readonly communicationTimeoutMinutes?: number;
 }
 
 /**

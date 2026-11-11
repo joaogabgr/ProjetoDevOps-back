@@ -1,4 +1,4 @@
-import { ILike, type DataSource, type Repository } from 'typeorm';
+import { ILike, type DataSource, type FindOptionsWhere, type Repository } from 'typeorm';
 import { Station } from '../../../domain/entities/Station';
 import { NotFoundError } from '../../../domain/errors/DomainError';
 import type {
@@ -89,8 +89,14 @@ export class TypeOrmStationRepository implements StationRepository {
   }
 
   async list(filters: StationListFilters): Promise<Paginated<Station>> {
+    const where: FindOptionsWhere<Station> = {};
+    if (filters.name) where.name = ILike(`%${filters.name}%`);
+    if (filters.biome) where.biome = filters.biome;
+    if (filters.community) where.community = filters.community;
+    if (filters.active !== undefined) where.active = filters.active;
+
     const [items, total] = await this.repository.findAndCount({
-      where: filters.name ? { name: ILike(`%${filters.name}%`) } : {},
+      where,
       order: { name: 'ASC' },
       skip: (filters.page - 1) * filters.perPage,
       take: filters.perPage,
