@@ -13,6 +13,7 @@ export function buildStationRoutes(controller: StationController): Router {
   router.get('/communities', view, controller.communities);
   router.get('/:id', view, controller.getById);
   router.patch('/:id', manage, controller.update);
+  router.patch('/:id/status', manage, controller.changeStatus);
   router.delete('/:id', manage, controller.remove);
 
   return router;

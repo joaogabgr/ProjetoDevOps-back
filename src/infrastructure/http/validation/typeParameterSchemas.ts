@@ -17,6 +17,8 @@ export const updateTypeParameterBodySchema = z
     name: z.string().trim().min(1, 'Informe o nome do parâmetro.').max(128).optional(),
     unit: z.string().trim().min(1, 'Informe a unidade.').max(32).optional(),
     numberOfDecimalCases: z.number().int().min(0).max(6).optional(),
+    // A chave está gravada nas placas (RF3 R3).
+    typeJson: z.unknown().refine((value) => value === undefined, 'A chave do parâmetro não pode ser alterada.'),
   })
   .refine((body) => Object.values(body).some((value) => value !== undefined), 'Informe ao menos um campo para atualizar.');
 

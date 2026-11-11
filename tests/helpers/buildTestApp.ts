@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Express } from 'express';
 import { GetCurrentUserUseCase } from '../../src/application/use-cases/auth/GetCurrentUserUseCase';
 import { LoginUseCase } from '../../src/application/use-cases/auth/LoginUseCase';
+import { ChangeStationStatusUseCase } from '../../src/application/use-cases/station/ChangeStationStatusUseCase';
 import { CreateStationUseCase } from '../../src/application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../../src/application/use-cases/station/DeleteStationUseCase';
 import { GetStationUseCase } from '../../src/application/use-cases/station/GetStationUseCase';
@@ -67,6 +68,7 @@ export function buildTestApp(
       new UpdateStationUseCase(stationRepository),
       new DeleteStationUseCase(stationRepository),
       new ListCommunitiesUseCase(stationRepository),
+      new ChangeStationStatusUseCase(stationRepository),
     ),
     typeParameterController: new TypeParameterController(
       new ListTypeParametersUseCase(typeParameterRepository),

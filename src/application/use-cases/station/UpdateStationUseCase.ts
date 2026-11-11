@@ -1,4 +1,5 @@
 import { NotFoundError } from '../../../domain/errors/DomainError';
+import type { Biome } from '../../../domain/enums/Biome';
 import type { StationRepository } from '../../../domain/repositories/StationRepository';
 import { toStationDTO, type StationDTO } from '../../dtos/StationDTO';
 
@@ -6,6 +7,10 @@ export interface UpdateStationInput {
   readonly name?: string;
   readonly latitude?: string;
   readonly longitude?: string;
+  readonly biome?: Biome;
+  readonly community?: string;
+  readonly timezone?: string;
+  readonly communicationTimeoutMinutes?: number;
 }
 
 /**
