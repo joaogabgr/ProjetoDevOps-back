@@ -27,7 +27,9 @@ export class CreateStationUseCase {
   async execute(input: CreateStationInput): Promise<StationDTO> {
     const alreadyRegistered = await this.stations.findByUuid(input.uuid);
     if (alreadyRegistered) {
-      throw new ConflictError(`Já existe uma estação com o uuid "${input.uuid}".`);
+      throw new ConflictError('Já existe uma estação com este identificador.', [
+        { field: 'uuid', message: 'Já existe uma estação com este identificador.' },
+      ]);
     }
 
     await this.assertTypeParametersExist(input.typeParameterIds);
