@@ -25,6 +25,7 @@ export class TypeOrmUserRepository implements UserRepository {
       password: data.passwordHash,
       cpf: data.cpf,
       role: data.role,
+      community: data.community,
       active: true,
     });
 

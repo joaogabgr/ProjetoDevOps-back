@@ -19,6 +19,7 @@ export const UserSchema = new EntitySchema<User>({
     password: { type: 'varchar', length: 255, select: false },
     role: { type: 'enum', enum: USER_ROLES, enumName: 'user_role' },
     cpf: { type: 'char', length: 11, unique: true },
+    community: { type: 'varchar', length: 120, nullable: true },
     createdAt: { name: 'created_at', type: 'timestamptz', createDate: true },
     active: { type: 'boolean', default: true },
   },

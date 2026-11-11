@@ -99,3 +99,36 @@ describe('POST /api/users (SCRUM-22 — RF5: cadastrar usuário)', () => {
     expect(response.body.error.code).toBe('CONFLICT');
   });
 });
+
+describe('POST /api/users com perfis do RF5 (SCRUM-74)', () => {
+  it('CA1: retorna 422 para agente comunitário sem comunidade', async () => {
+    const { app } = buildTestApp();
+
+    const response = await request(app).post('/api/users').send({
+      name: 'Agente Sem Comunidade',
+      email: 'agente@vigia.org',
+      password: 'senha-forte',
+      cpf: '52998224725',
+      role: 'COMMUNITY_AGENT',
+    });
+
+    expect(response.status).toBe(422);
+    expect(response.body.error.details).toEqual([
+      { field: 'community', message: 'Informe a comunidade do agente comunitário.' },
+    ]);
+  });
+
+  it('recusa os perfis antigos', async () => {
+    const { app } = buildTestApp();
+
+    const response = await request(app).post('/api/users').send({
+      name: 'Perfil Antigo',
+      email: 'antigo@vigia.org',
+      password: 'senha-forte',
+      cpf: '52998224725',
+      role: 'EMPLOYEE',
+    });
+
+    expect(response.status).toBe(422);
+  });
+});

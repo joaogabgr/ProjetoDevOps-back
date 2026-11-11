@@ -18,6 +18,7 @@ export interface CreateUserData {
   readonly passwordHash: string;
   readonly cpf: string;
   readonly role: UserRole;
+  readonly community: string | null;
 }
 
 /**
@@ -31,6 +32,7 @@ export interface UpdateUserData {
   readonly name?: string;
   readonly email?: string;
   readonly role?: UserRole;
+  readonly community?: string | null;
   readonly active?: boolean;
 }
 

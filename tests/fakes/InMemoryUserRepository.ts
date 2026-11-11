@@ -28,6 +28,7 @@ export class InMemoryUserRepository implements UserRepository {
     user.password = data.passwordHash;
     user.cpf = data.cpf;
     user.role = data.role;
+    user.community = data.community;
     user.createdAt = new Date();
     user.active = true;
 
@@ -88,7 +89,8 @@ export function buildUser(overrides: Partial<User> = {}): User {
   user.name = overrides.name ?? 'Usuário de Teste';
   user.email = overrides.email ?? 'usuario@example.com';
   user.password = overrides.password ?? 'hash-fake';
-  user.role = overrides.role ?? UserRole.EMPLOYEE;
+  user.role = overrides.role ?? UserRole.TECHNICIAN;
+  user.community = overrides.community ?? null;
   user.cpf = overrides.cpf ?? '11144477735';
   user.createdAt = overrides.createdAt ?? new Date('2026-01-01T00:00:00.000Z');
   user.active = overrides.active ?? true;

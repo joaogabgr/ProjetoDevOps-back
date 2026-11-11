@@ -8,6 +8,7 @@ export interface UserDTO {
   email: string;
   cpf: string;
   role: UserRole;
+  community: string | null;
   createdAt: string;
   active: boolean;
 }
@@ -19,6 +20,7 @@ export function toUserDTO(user: User): UserDTO {
     email: user.email,
     cpf: user.cpf,
     role: user.role,
+    community: user.community,
     createdAt: user.createdAt.toISOString(),
     active: user.active,
   };
