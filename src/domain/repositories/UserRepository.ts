@@ -51,6 +51,8 @@ export interface UserRepository {
   countActiveAdmins(): Promise<number>;
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
+  /** Igual a `findByEmail`, mas traz o hash da senha — só para o login. */
+  findByEmailWithPassword(email: string): Promise<User | null>;
   findByCpf(cpf: string): Promise<User | null>;
   list(filters: UserListFilters): Promise<Paginated<User>>;
 }

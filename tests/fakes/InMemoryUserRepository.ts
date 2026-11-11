@@ -62,6 +62,10 @@ export class InMemoryUserRepository implements UserRepository {
     return [...this.users.values()].find((user) => user.email === email) ?? null;
   }
 
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    return this.findByEmail(email);
+  }
+
   async findByCpf(cpf: string): Promise<User | null> {
     return [...this.users.values()].find((user) => user.cpf === cpf) ?? null;
   }
