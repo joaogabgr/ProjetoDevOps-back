@@ -12,4 +12,16 @@ export const createTypeParameterBodySchema = z.object({
   numberOfDecimalCases: z.number().int().min(0).max(6).default(2),
 });
 
+export const updateTypeParameterBodySchema = z
+  .object({
+    name: z.string().trim().min(1, 'Informe o nome do parâmetro.').max(128).optional(),
+    unit: z.string().trim().min(1, 'Informe a unidade.').max(32).optional(),
+    numberOfDecimalCases: z.number().int().min(0).max(6).optional(),
+  })
+  .refine((body) => Object.values(body).some((value) => value !== undefined), 'Informe ao menos um campo para atualizar.');
+
+export const typeParameterIdParamsSchema = z.object({
+  id: z.string().regex(/^\d+$/, 'Id de parâmetro inválido.'),
+});
+
 export type CreateTypeParameterBody = z.infer<typeof createTypeParameterBodySchema>;
