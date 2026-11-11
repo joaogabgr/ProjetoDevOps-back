@@ -80,6 +80,7 @@ export class TypeOrmUserRepository implements UserRepository {
     const where: FindOptionsWhere<User> = {};
     if (filters.role) where.role = filters.role;
     if (filters.name) where.name = ILike(`%${filters.name}%`);
+    if (filters.community) where.community = filters.community;
 
     const [items, total] = await this.repository.findAndCount({
       where,

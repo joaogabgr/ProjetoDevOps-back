@@ -75,6 +75,7 @@ export class InMemoryUserRepository implements UserRepository {
     const filtered = [...this.users.values()]
       .filter((user) => !filters.role || user.role === filters.role)
       .filter((user) => !name || user.name.toLowerCase().includes(name))
+      .filter((user) => !filters.community || user.community === filters.community)
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'));
 
     const start = (filters.page - 1) * filters.perPage;
