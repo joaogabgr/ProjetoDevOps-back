@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { Express } from 'express';
 import { GetCurrentUserUseCase } from '../../src/application/use-cases/auth/GetCurrentUserUseCase';
 import { LoginUseCase } from '../../src/application/use-cases/auth/LoginUseCase';
@@ -19,6 +20,7 @@ import { TypeParameterController } from '../../src/infrastructure/http/controlle
 import { UserController } from '../../src/infrastructure/http/controllers/UserController';
 import { JwtTokenService } from '../../src/infrastructure/security/JwtTokenService';
 import type { Container } from '../../src/main/container';
+import { UserRole } from '../../src/domain/enums/UserRole';
 import { FakePasswordHasher } from '../fakes/FakePasswordHasher';
 import { InMemoryStationRepository } from '../fakes/InMemoryStationRepository';
 import { InMemoryTypeParameterRepository } from '../fakes/InMemoryTypeParameterRepository';
@@ -26,6 +28,15 @@ import { InMemoryUserRepository } from '../fakes/InMemoryUserRepository';
 
 /** Mesmo segredo e validade em todos os testes, para gerar tokens fora da app. */
 export const testTokenService = new JwtTokenService('segredo-de-teste-com-pelo-menos-32-caracteres', 8);
+
+/** Cabeçalho `Authorization` de uma sessão com o perfil pedido, para chamar rotas protegidas. */
+export function authAs(role: UserRole = UserRole.ADMIN, community: string | null = null): { Authorization: string } {
+  const { token } = testTokenService.issue({ userId: randomUUID(), role, community });
+  return { Authorization: `Bearer ${token}` };
+}
+
+/** Sessão de administrador, que pode tudo: usada pelos testes que não tratam de permissão. */
+export const asAdmin = authAs(UserRole.ADMIN);
 
 /**
  * Monta a app Express com repositórios em memória — mesmo composition root de
