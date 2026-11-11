@@ -63,6 +63,11 @@ export const listStationsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   perPage: z.coerce.number().int().positive().max(100).default(20),
   name: z.string().trim().min(1).optional(),
+  biome: biome.optional(),
+  community: z.string().trim().min(1).optional(),
+  status: z
+    .enum(['active', 'inactive'], { errorMap: () => ({ message: 'status deve ser active ou inactive.' }) })
+    .optional(),
 });
 
 export type CreateStationBody = z.infer<typeof createStationBodySchema>;

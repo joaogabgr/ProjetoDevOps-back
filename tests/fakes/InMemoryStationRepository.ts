@@ -81,6 +81,9 @@ export class InMemoryStationRepository implements StationRepository {
 
     const filtered = [...this.stations.values()]
       .filter((station) => !nameFilter || station.name.toLowerCase().includes(nameFilter))
+      .filter((station) => !filters.biome || station.biome === filters.biome)
+      .filter((station) => !filters.community || station.community === filters.community)
+      .filter((station) => filters.active === undefined || station.active === filters.active)
       .sort((a, b) => a.name.localeCompare(b.name));
 
     const start = (filters.page - 1) * filters.perPage;
