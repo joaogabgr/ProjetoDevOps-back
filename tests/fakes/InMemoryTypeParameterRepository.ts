@@ -17,6 +17,13 @@ export class InMemoryTypeParameterRepository implements TypeParameterRepository 
     this.stationLinks.set(id, count);
   }
 
+  /** Leituras por parâmetro, para testar a regra de exclusão. */
+  private readonly measureCounts = new Map<string, number>();
+
+  recordMeasures(id: string, count: number): void {
+    this.measureCounts.set(id, count);
+  }
+
   async create(data: CreateTypeParameterData): Promise<TypeParameter> {
     const nextId = Math.max(0, ...this.typeParameters.map((tp) => Number(tp.id))) + 1;
     const typeParameter = buildTypeParameter({ ...data, id: String(nextId), factor: 1, offset: 0 });
@@ -43,6 +50,14 @@ export class InMemoryTypeParameterRepository implements TypeParameterRepository 
 
   async countStationLinks(id: string): Promise<number> {
     return this.stationLinks.get(id) ?? 0;
+  }
+
+  async countMeasures(id: string): Promise<number> {
+    return this.measureCounts.get(id) ?? 0;
+  }
+
+  async unlinkFromStations(id: string): Promise<void> {
+    this.stationLinks.delete(id);
   }
 
   async findByTypeJson(typeJson: string): Promise<TypeParameter | null> {
