@@ -1,4 +1,5 @@
 import type { Station } from '../entities/Station';
+import type { Biome } from '../enums/Biome';
 
 export interface StationListFilters {
   readonly page: number;
@@ -24,6 +25,10 @@ export interface CreateStationData {
   readonly name: string;
   readonly latitude: string;
   readonly longitude: string;
+  readonly biome: Biome;
+  readonly community: string;
+  readonly timezone: string;
+  readonly communicationTimeoutMinutes: number;
   readonly parameters: ReadonlyArray<StationParameterInput>;
 }
 
@@ -45,5 +50,7 @@ export interface StationRepository {
   delete(id: string): Promise<void>;
   findById(id: string): Promise<Station | null>;
   findByUuid(uuid: string): Promise<Station | null>;
+  /** Comunidades distintas, em ordem alfabética (RF2 R3). */
+  listCommunities(): Promise<string[]>;
   list(filters: StationListFilters): Promise<Paginated<Station>>;
 }

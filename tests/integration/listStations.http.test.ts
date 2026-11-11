@@ -1,13 +1,13 @@
 import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { buildStation } from '../fakes/InMemoryStationRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 describe('GET /api/stations (SCRUM-16 — RF2: listar estações cadastradas)', () => {
   it('retorna 200 com lista vazia quando não há estações', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).get('/api/stations');
+    const response = await request(app).get('/api/stations').set(asAdmin);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual([]);
@@ -21,7 +21,7 @@ describe('GET /api/stations (SCRUM-16 — RF2: listar estações cadastradas)', 
       buildStation({ name: 'Estação Norte' }),
     ]);
 
-    const response = await request(app).get('/api/stations');
+    const response = await request(app).get('/api/stations').set(asAdmin);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(2);
@@ -40,7 +40,7 @@ describe('GET /api/stations (SCRUM-16 — RF2: listar estações cadastradas)', 
       buildStation({ name: 'Estação C' }),
     ]);
 
-    const response = await request(app).get('/api/stations').query({ page: 2, perPage: 2 });
+    const response = await request(app).get('/api/stations').set(asAdmin).query({ page: 2, perPage: 2 });
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(1);
@@ -55,7 +55,7 @@ describe('GET /api/stations (SCRUM-16 — RF2: listar estações cadastradas)', 
       buildStation({ name: 'Estação Litoral Norte' }),
     ]);
 
-    const response = await request(app).get('/api/stations').query({ name: 'litoral' });
+    const response = await request(app).get('/api/stations').set(asAdmin).query({ name: 'litoral' });
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(1);
@@ -65,7 +65,7 @@ describe('GET /api/stations (SCRUM-16 — RF2: listar estações cadastradas)', 
   it('retorna 422 quando a query é inválida', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).get('/api/stations').query({ perPage: 1000 });
+    const response = await request(app).get('/api/stations').set(asAdmin).query({ perPage: 1000 });
 
     expect(response.status).toBe(422);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');

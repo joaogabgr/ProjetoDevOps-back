@@ -28,6 +28,28 @@ export class NotFoundError extends DomainError {
 export class ConflictError extends DomainError {
   readonly code = 'CONFLICT';
 
+  /** `details` aponta o campo em conflito, para a tela mostrar a mensagem ao lado dele (RNF1). */
+  constructor(
+    message: string,
+    readonly details: ReadonlyArray<{ field: string; message: string }> = [],
+  ) {
+    super(message);
+  }
+}
+
+/** Sem sessão válida: e-mail ou senha errados, ou token ausente, inválido ou vencido. */
+export class UnauthorizedError extends DomainError {
+  readonly code = 'UNAUTHORIZED';
+
+  constructor(message: string) {
+    super(message);
+  }
+}
+
+/** Com sessão, mas sem permissão para a ação (RF9 R6). */
+export class ForbiddenError extends DomainError {
+  readonly code = 'FORBIDDEN';
+
   constructor(message: string) {
     super(message);
   }

@@ -1,4 +1,5 @@
 import type { Station } from '../../domain/entities/Station';
+import type { Biome } from '../../domain/enums/Biome';
 
 /** Representação da estação exposta pela API — desacoplada da entidade de domínio. */
 export interface StationDTO {
@@ -7,6 +8,11 @@ export interface StationDTO {
   name: string;
   latitude: string;
   longitude: string;
+  biome: Biome;
+  community: string;
+  timezone: string;
+  communicationTimeoutMinutes: number;
+  active: boolean;
   createdAt: string;
   dateLastMeasure: number | null;
   parameters?: Array<{
@@ -24,6 +30,11 @@ export function toStationDTO(station: Station): StationDTO {
     name: station.name,
     latitude: station.latitude,
     longitude: station.longitude,
+    biome: station.biome,
+    community: station.community,
+    timezone: station.timezone,
+    communicationTimeoutMinutes: station.communicationTimeoutMinutes,
+    active: station.active,
     createdAt: station.createdAt.toISOString(),
     dateLastMeasure: station.dateLastMeasure,
   };

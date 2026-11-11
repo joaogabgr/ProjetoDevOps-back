@@ -1,11 +1,17 @@
 import type { DataSource } from 'typeorm';
+import type { TokenService } from '../domain/services/TokenService';
+import { GetCurrentUserUseCase } from '../application/use-cases/auth/GetCurrentUserUseCase';
+import { LoginUseCase } from '../application/use-cases/auth/LoginUseCase';
 import { CreateStationUseCase } from '../application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../application/use-cases/station/DeleteStationUseCase';
 import { GetStationUseCase } from '../application/use-cases/station/GetStationUseCase';
+import { ListCommunitiesUseCase } from '../application/use-cases/station/ListCommunitiesUseCase';
 import { ListStationsUseCase } from '../application/use-cases/station/ListStationsUseCase';
 import { UpdateStationUseCase } from '../application/use-cases/station/UpdateStationUseCase';
 import { CreateTypeParameterUseCase } from '../application/use-cases/type-parameter/CreateTypeParameterUseCase';
+import { DeleteTypeParameterUseCase } from '../application/use-cases/type-parameter/DeleteTypeParameterUseCase';
 import { ListTypeParametersUseCase } from '../application/use-cases/type-parameter/ListTypeParametersUseCase';
+import { UpdateTypeParameterUseCase } from '../application/use-cases/type-parameter/UpdateTypeParameterUseCase';
 import { CreateUserUseCase } from '../application/use-cases/user/CreateUserUseCase';
 import { DeleteUserUseCase } from '../application/use-cases/user/DeleteUserUseCase';
 import { ListUsersUseCase } from '../application/use-cases/user/ListUsersUseCase';
@@ -13,12 +19,17 @@ import { UpdateUserUseCase } from '../application/use-cases/user/UpdateUserUseCa
 import { TypeOrmStationRepository } from '../infrastructure/database/repositories/TypeOrmStationRepository';
 import { TypeOrmTypeParameterRepository } from '../infrastructure/database/repositories/TypeOrmTypeParameterRepository';
 import { TypeOrmUserRepository } from '../infrastructure/database/repositories/TypeOrmUserRepository';
+import { env } from '../infrastructure/config/env';
+import { AuthController } from '../infrastructure/http/controllers/AuthController';
 import { StationController } from '../infrastructure/http/controllers/StationController';
 import { TypeParameterController } from '../infrastructure/http/controllers/TypeParameterController';
 import { UserController } from '../infrastructure/http/controllers/UserController';
 import { BcryptPasswordHasher } from '../infrastructure/security/BcryptPasswordHasher';
+import { JwtTokenService } from '../infrastructure/security/JwtTokenService';
 
 export interface Container {
+  readonly tokenService: TokenService;
+  readonly authController: AuthController;
   readonly stationController: StationController;
   readonly typeParameterController: TypeParameterController;
   readonly userController: UserController;
@@ -40,11 +51,14 @@ export function buildContainer(dataSource: DataSource): Container {
     new GetStationUseCase(stationRepository),
     new UpdateStationUseCase(stationRepository),
     new DeleteStationUseCase(stationRepository),
+    new ListCommunitiesUseCase(stationRepository),
   );
 
   const typeParameterController = new TypeParameterController(
     new ListTypeParametersUseCase(typeParameterRepository),
     new CreateTypeParameterUseCase(typeParameterRepository),
+    new UpdateTypeParameterUseCase(typeParameterRepository),
+    new DeleteTypeParameterUseCase(typeParameterRepository),
   );
 
   const userRepository = new TypeOrmUserRepository(dataSource);
@@ -56,5 +70,11 @@ export function buildContainer(dataSource: DataSource): Container {
     new DeleteUserUseCase(userRepository),
   );
 
-  return { stationController, typeParameterController, userController };
+  const tokenService = new JwtTokenService(env.JWT_SECRET, env.SESSION_HOURS);
+  const authController = new AuthController(
+    new LoginUseCase(userRepository, passwordHasher, tokenService),
+    new GetCurrentUserUseCase(userRepository),
+  );
+
+  return { tokenService, authController, stationController, typeParameterController, userController };
 }

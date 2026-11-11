@@ -4,7 +4,9 @@ import { ZodError } from 'zod';
 import {
   ConflictError,
   DomainError,
+  ForbiddenError,
   NotFoundError,
+  UnauthorizedError,
   ValidationError,
 } from '../../../domain/errors/DomainError';
 import { isProduction } from '../../config/env';
@@ -13,6 +15,8 @@ import { isProduction } from '../../config/env';
 const PG_UNIQUE_VIOLATION = '23505';
 
 const STATUS_BY_ERROR = new Map<string, number>([
+  [UnauthorizedError.name, 401],
+  [ForbiddenError.name, 403],
   [NotFoundError.name, 404],
   [ConflictError.name, 409],
   [ValidationError.name, 422],
@@ -50,7 +54,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       error: {
         code: error.code,
         message: error.message,
-        ...(error instanceof ValidationError && error.details.length > 0
+        ...((error instanceof ValidationError || error instanceof ConflictError) && error.details.length > 0
           ? { details: error.details }
           : {}),
       },

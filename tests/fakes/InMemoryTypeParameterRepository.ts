@@ -1,18 +1,48 @@
 import { TypeParameter } from '../../src/domain/entities/TypeParameter';
+import { NotFoundError } from '../../src/domain/errors/DomainError';
 import type {
   CreateTypeParameterData,
   TypeParameterRepository,
+  UpdateTypeParameterData,
 } from '../../src/domain/repositories/TypeParameterRepository';
 
 /** Implementação em memória da porta `TypeParameterRepository`, usada só em teste. */
 export class InMemoryTypeParameterRepository implements TypeParameterRepository {
+  /** Quantas estações têm cada parâmetro instalado; preencha com `linkToStations`. */
+  private readonly stationLinks = new Map<string, number>();
+
   constructor(private readonly typeParameters: TypeParameter[] = []) {}
+
+  linkToStations(id: string, count: number): void {
+    this.stationLinks.set(id, count);
+  }
 
   async create(data: CreateTypeParameterData): Promise<TypeParameter> {
     const nextId = Math.max(0, ...this.typeParameters.map((tp) => Number(tp.id))) + 1;
     const typeParameter = buildTypeParameter({ ...data, id: String(nextId), factor: 1, offset: 0 });
     this.typeParameters.push(typeParameter);
     return typeParameter;
+  }
+
+  async update(id: string, data: UpdateTypeParameterData): Promise<TypeParameter> {
+    const typeParameter = this.typeParameters.find((tp) => String(tp.id) === id);
+    if (!typeParameter) {
+      throw new NotFoundError('Parâmetro', id);
+    }
+    Object.assign(
+      typeParameter,
+      Object.fromEntries(Object.entries(data).filter(([, value]) => value !== undefined)),
+    );
+    return typeParameter;
+  }
+
+  async delete(id: string): Promise<void> {
+    const index = this.typeParameters.findIndex((tp) => String(tp.id) === id);
+    if (index >= 0) this.typeParameters.splice(index, 1);
+  }
+
+  async countStationLinks(id: string): Promise<number> {
+    return this.stationLinks.get(id) ?? 0;
   }
 
   async findByTypeJson(typeJson: string): Promise<TypeParameter | null> {

@@ -1,0 +1,94 @@
+name: CI
+
+# Verificação de todo PR e de todo merge (RNF3). Os jobs titulo, typecheck, testes
+# e build são verificações obrigatórias nas branches develop, homolog e main.
+on:
+  pull_request:
+    branches: [develop, homolog, main]
+  push:
+    branches: [develop, homolog, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # O squash usa o título do PR como mensagem do commit: sem a chave, o código perde
+  # a ligação com o Jira e não entra na release. Promoções (homolog, main) não precisam.
+  titulo:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Título começa com a chave do Jira
+        if: github.base_ref == 'develop'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ ! "$TITLE" =~ ^SCRUM-[0-9]+-rn?f-[0-9]+- ]]; then
+            echo "::error::O título do PR precisa ser o nome da branch, ex.: SCRUM-57-rf-2-novos-campos-da-estacao"
+            exit 1
+          fi
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run typecheck:test
+
+  # Mesmo PostgreSQL de produção: as migrations rodam num banco limpo antes dos testes.
+  testes:
+    needs: typecheck
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      NODE_ENV: test
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: ci
+      DB_PASSWORD: ci
+      DB_NAME: ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - name: Migrations num banco limpo
+        run: npm run migration:run
+      - name: Migrations podem ser desfeitas e refeitas
+        run: |
+          npm run migration:revert
+          npm run migration:run
+      - run: npm test
+
+  build:
+    needs: testes
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
