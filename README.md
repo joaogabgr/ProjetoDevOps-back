@@ -7,7 +7,8 @@ API e serviços do sistema de monitoramento comunitário e prevenção de enchen
 | O quê | Onde |
 |---|---|
 | Requisitos, atas e processo do time | [Confluence – espaço Vigia das Águas](https://projetodevops.atlassian.net/wiki/spaces/VIGIA) |
-| Modelo de dados e pipeline de CI/CD | [Confluence › Arquitetura](https://projetodevops.atlassian.net/wiki/spaces/VIGIA/pages/491764) |
+| Pipeline de CI/CD: jobs de cada ambiente e regras | [Confluence › Pipeline de CI/CD](https://projetodevops.atlassian.net/wiki/spaces/VIGIA/pages/491764) |
+| Modelo de dados | [Confluence › Modelo de dados](https://projetodevops.atlassian.net/wiki/spaces/VIGIA/pages/720910) |
 | Histórias e subtarefas | [Jira – projeto SCRUM](https://projetodevops.atlassian.net/jira/software/projects/SCRUM/boards/1) (componente **Backend**) |
 | Front-end | [ProjetoDevOps-front](https://github.com/joaogabgr/ProjetoDevOps-front) |
 
