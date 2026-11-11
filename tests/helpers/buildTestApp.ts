@@ -9,6 +9,7 @@ import { ListCommunitiesUseCase } from '../../src/application/use-cases/station/
 import { ListStationsUseCase } from '../../src/application/use-cases/station/ListStationsUseCase';
 import { UpdateStationUseCase } from '../../src/application/use-cases/station/UpdateStationUseCase';
 import { CreateTypeParameterUseCase } from '../../src/application/use-cases/type-parameter/CreateTypeParameterUseCase';
+import { DeleteTypeParameterUseCase } from '../../src/application/use-cases/type-parameter/DeleteTypeParameterUseCase';
 import { ListTypeParametersUseCase } from '../../src/application/use-cases/type-parameter/ListTypeParametersUseCase';
 import { UpdateTypeParameterUseCase } from '../../src/application/use-cases/type-parameter/UpdateTypeParameterUseCase';
 import { CreateUserUseCase } from '../../src/application/use-cases/user/CreateUserUseCase';
@@ -71,6 +72,7 @@ export function buildTestApp(
       new ListTypeParametersUseCase(typeParameterRepository),
       new CreateTypeParameterUseCase(typeParameterRepository),
       new UpdateTypeParameterUseCase(typeParameterRepository),
+      new DeleteTypeParameterUseCase(typeParameterRepository),
     ),
     userController: new UserController(
       new CreateUserUseCase(userRepository, new FakePasswordHasher()),

@@ -17,6 +17,9 @@ export interface UpdateTypeParameterData {
 export interface TypeParameterRepository {
   create(data: CreateTypeParameterData): Promise<TypeParameter>;
   update(id: string, data: UpdateTypeParameterData): Promise<TypeParameter>;
+  delete(id: string): Promise<void>;
+  /** Em quantas estações o parâmetro está instalado (RF1). */
+  countStationLinks(id: string): Promise<number>;
   findAll(): Promise<TypeParameter[]>;
   findById(id: string): Promise<TypeParameter | null>;
   findByTypeJson(typeJson: string): Promise<TypeParameter | null>;
