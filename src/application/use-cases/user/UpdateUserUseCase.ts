@@ -1,5 +1,5 @@
 import { ConflictError, NotFoundError } from '../../../domain/errors/DomainError';
-import type { UserRole } from '../../../domain/enums/UserRole';
+import { UserRole } from '../../../domain/enums/UserRole';
 import type { UserRepository } from '../../../domain/repositories/UserRepository';
 import { toUserDTO, type UserDTO } from '../../dtos/UserDTO';
 import { communityFor } from './CreateUserUseCase';
@@ -24,6 +24,11 @@ export class UpdateUserUseCase {
     const current = await this.users.findById(id);
     if (!current) {
       throw new NotFoundError('Usuário', id);
+    }
+
+    const demoting = input.role !== undefined && input.role !== UserRole.ADMIN && current.active;
+    if (demoting && current.isAdmin() && (await this.users.countActiveAdmins()) <= 1) {
+      throw new ConflictError('Não é possível remover o último administrador ativo.');
     }
 
     const deactivating = input.active === false && current.active;

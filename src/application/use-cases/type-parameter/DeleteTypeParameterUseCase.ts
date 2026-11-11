@@ -1,7 +1,7 @@
 import { ConflictError, NotFoundError } from '../../../domain/errors/DomainError';
 import type { TypeParameterRepository } from '../../../domain/repositories/TypeParameterRepository';
 
-/** Exclui um parâmetro do catálogo (RF3). */
+/** Exclui um parâmetro sem leituras, desligando-o das estações (RF3 R5). */
 export class DeleteTypeParameterUseCase {
   constructor(private readonly typeParameters: TypeParameterRepository) {}
 
@@ -11,10 +11,11 @@ export class DeleteTypeParameterUseCase {
       throw new NotFoundError('Parâmetro', id);
     }
 
-    if ((await this.typeParameters.countStationLinks(id)) > 0) {
-      throw new ConflictError('Parâmetro instalado em estações não pode ser excluído.');
+    if ((await this.typeParameters.countMeasures(id)) > 0) {
+      throw new ConflictError('Parâmetro com leituras não pode ser excluído.');
     }
 
+    await this.typeParameters.unlinkFromStations(id);
     await this.typeParameters.delete(id);
   }
 }

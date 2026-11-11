@@ -6,16 +6,19 @@ import type {
   TypeParameterRepository,
   UpdateTypeParameterData,
 } from '../../../domain/repositories/TypeParameterRepository';
+import type { Measure } from '../../../domain/entities/Measure';
 import type { Parameter } from '../../../domain/entities/Parameter';
-import { ParameterSchema, TypeParameterSchema } from '../schemas';
+import { MeasureSchema, ParameterSchema, TypeParameterSchema } from '../schemas';
 
 export class TypeOrmTypeParameterRepository implements TypeParameterRepository {
   private readonly repository: Repository<TypeParameter>;
   private readonly stationParameters: Repository<Parameter>;
+  private readonly measures: Repository<Measure>;
 
   constructor(dataSource: DataSource) {
     this.repository = dataSource.getRepository(TypeParameterSchema);
     this.stationParameters = dataSource.getRepository(ParameterSchema);
+    this.measures = dataSource.getRepository(MeasureSchema);
   }
 
   async create(data: CreateTypeParameterData): Promise<TypeParameter> {
@@ -42,6 +45,14 @@ export class TypeOrmTypeParameterRepository implements TypeParameterRepository {
 
   async countStationLinks(id: string): Promise<number> {
     return this.stationParameters.count({ where: { typeParameterId: id } });
+  }
+
+  async countMeasures(id: string): Promise<number> {
+    return this.measures.count({ where: { parameter: { typeParameterId: id } } });
+  }
+
+  async unlinkFromStations(id: string): Promise<void> {
+    await this.stationParameters.delete({ typeParameterId: id });
   }
 
   async findByTypeJson(typeJson: string): Promise<TypeParameter | null> {
