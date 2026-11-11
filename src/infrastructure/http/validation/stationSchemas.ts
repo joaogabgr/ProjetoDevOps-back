@@ -52,8 +52,18 @@ export const updateStationBodySchema = z
     name: z.string().trim().min(3).max(255).optional(),
     latitude: coordinate(-90, 90, 'Latitude').optional(),
     longitude: coordinate(-180, 180, 'Longitude').optional(),
+    biome: biome.optional(),
+    community: community.optional(),
+    timezone: timezone.optional(),
+    communicationTimeoutMinutes: communicationTimeoutMinutes.optional(),
+    // O uid está gravado na placa: trocar aqui desligaria as leituras do cadastro.
+    uuid: z.unknown().refine((value) => value === undefined, 'O identificador não pode ser alterado.'),
   })
   .refine((body) => Object.keys(body).length > 0, 'Informe ao menos um campo para atualizar.');
+
+export const stationStatusBodySchema = z.object({
+  active: z.boolean({ required_error: 'Informe active: true ou false.' }),
+});
 
 export const stationIdParamsSchema = z.object({
   id: z.string().uuid('Id de estação inválido.'),
@@ -63,6 +73,11 @@ export const listStationsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
   perPage: z.coerce.number().int().positive().max(100).default(20),
   name: z.string().trim().min(1).optional(),
+  biome: biome.optional(),
+  community: z.string().trim().min(1).optional(),
+  status: z
+    .enum(['active', 'inactive'], { errorMap: () => ({ message: 'status deve ser active ou inactive.' }) })
+    .optional(),
 });
 
 export type CreateStationBody = z.infer<typeof createStationBodySchema>;
