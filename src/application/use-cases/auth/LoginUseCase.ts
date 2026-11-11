@@ -1,4 +1,4 @@
-import { UnauthorizedError } from '../../../domain/errors/DomainError';
+import { ForbiddenError, UnauthorizedError } from '../../../domain/errors/DomainError';
 import type { UserRepository } from '../../../domain/repositories/UserRepository';
 import type { PasswordHasher } from '../../../domain/services/PasswordHasher';
 import type { TokenService } from '../../../domain/services/TokenService';
@@ -30,6 +30,11 @@ export class LoginUseCase {
     const user = await this.users.findByEmailWithPassword(input.email.trim().toLowerCase());
     if (!user || !(await this.passwordHasher.compare(input.password, user.password))) {
       throw new UnauthorizedError(INVALID_CREDENTIALS);
+    }
+
+    // Só depois da senha certa, para não revelar a quem não sabe a senha que a conta existe.
+    if (!user.active) {
+      throw new ForbiddenError('Usuário desativado. Fale com o administrador.');
     }
 
     const { token, expiresAt } = this.tokens.issue({
