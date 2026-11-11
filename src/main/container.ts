@@ -1,4 +1,6 @@
 import type { DataSource } from 'typeorm';
+import type { TokenService } from '../domain/services/TokenService';
+import { GetCurrentUserUseCase } from '../application/use-cases/auth/GetCurrentUserUseCase';
 import { LoginUseCase } from '../application/use-cases/auth/LoginUseCase';
 import { CreateStationUseCase } from '../application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../application/use-cases/station/DeleteStationUseCase';
@@ -23,6 +25,7 @@ import { BcryptPasswordHasher } from '../infrastructure/security/BcryptPasswordH
 import { JwtTokenService } from '../infrastructure/security/JwtTokenService';
 
 export interface Container {
+  readonly tokenService: TokenService;
   readonly authController: AuthController;
   readonly stationController: StationController;
   readonly typeParameterController: TypeParameterController;
@@ -62,7 +65,10 @@ export function buildContainer(dataSource: DataSource): Container {
   );
 
   const tokenService = new JwtTokenService(env.JWT_SECRET, env.SESSION_HOURS);
-  const authController = new AuthController(new LoginUseCase(userRepository, passwordHasher, tokenService));
+  const authController = new AuthController(
+    new LoginUseCase(userRepository, passwordHasher, tokenService),
+    new GetCurrentUserUseCase(userRepository),
+  );
 
-  return { authController, stationController, typeParameterController, userController };
+  return { tokenService, authController, stationController, typeParameterController, userController };
 }

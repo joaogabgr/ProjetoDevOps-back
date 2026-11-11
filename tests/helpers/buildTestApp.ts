@@ -1,4 +1,5 @@
 import type { Express } from 'express';
+import { GetCurrentUserUseCase } from '../../src/application/use-cases/auth/GetCurrentUserUseCase';
 import { LoginUseCase } from '../../src/application/use-cases/auth/LoginUseCase';
 import { CreateStationUseCase } from '../../src/application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../../src/application/use-cases/station/DeleteStationUseCase';
@@ -40,8 +41,10 @@ export function buildTestApp(
   userRepository: InMemoryUserRepository;
 } {
   const container: Container = {
+    tokenService: testTokenService,
     authController: new AuthController(
       new LoginUseCase(userRepository, new FakePasswordHasher(), testTokenService),
+      new GetCurrentUserUseCase(userRepository),
     ),
     stationController: new StationController(
       new CreateStationUseCase(stationRepository, typeParameterRepository),
