@@ -49,6 +49,7 @@ export const listUsersQuerySchema = z.object({
     })
     .optional(),
   name: z.string().trim().min(1).optional(),
+  community: z.string().trim().min(1).optional(),
 });
 
 export type CreateUserBody = z.infer<typeof createUserBodySchema>;

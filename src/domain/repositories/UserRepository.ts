@@ -9,6 +9,8 @@ export interface UserListFilters {
   readonly role?: UserRole;
   /** Busca parcial por nome, case-insensitive. */
   readonly name?: string;
+  /** Comunidade exata do agente comunitário. */
+  readonly community?: string;
 }
 
 export interface CreateUserData {
