@@ -5,6 +5,7 @@ import { LoginUseCase } from '../application/use-cases/auth/LoginUseCase';
 import { CreateStationUseCase } from '../application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../application/use-cases/station/DeleteStationUseCase';
 import { GetStationUseCase } from '../application/use-cases/station/GetStationUseCase';
+import { ListCommunitiesUseCase } from '../application/use-cases/station/ListCommunitiesUseCase';
 import { ListStationsUseCase } from '../application/use-cases/station/ListStationsUseCase';
 import { UpdateStationUseCase } from '../application/use-cases/station/UpdateStationUseCase';
 import { CreateTypeParameterUseCase } from '../application/use-cases/type-parameter/CreateTypeParameterUseCase';
@@ -48,6 +49,7 @@ export function buildContainer(dataSource: DataSource): Container {
     new GetStationUseCase(stationRepository),
     new UpdateStationUseCase(stationRepository),
     new DeleteStationUseCase(stationRepository),
+    new ListCommunitiesUseCase(stationRepository),
   );
 
   const typeParameterController = new TypeParameterController(

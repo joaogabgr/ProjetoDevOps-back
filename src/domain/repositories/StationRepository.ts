@@ -50,5 +50,7 @@ export interface StationRepository {
   delete(id: string): Promise<void>;
   findById(id: string): Promise<Station | null>;
   findByUuid(uuid: string): Promise<Station | null>;
+  /** Comunidades distintas, em ordem alfabética (RF2 R3). */
+  listCommunities(): Promise<string[]>;
   list(filters: StationListFilters): Promise<Paginated<Station>>;
 }

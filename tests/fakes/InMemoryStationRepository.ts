@@ -71,6 +71,11 @@ export class InMemoryStationRepository implements StationRepository {
     return [...this.stations.values()].find((station) => station.uuid === uuid) ?? null;
   }
 
+  async listCommunities(): Promise<string[]> {
+    const communities = new Set([...this.stations.values()].map((station) => station.community));
+    return [...communities].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
   async list(filters: StationListFilters): Promise<Paginated<Station>> {
     const nameFilter = filters.name?.toLowerCase();
 

@@ -9,6 +9,8 @@ export function buildStationRoutes(controller: StationController): Router {
 
   router.post('/', manage, controller.create);
   router.get('/', view, controller.list);
+  // Antes de '/:id', senão "communities" seria lido como id.
+  router.get('/communities', view, controller.communities);
   router.get('/:id', view, controller.getById);
   router.patch('/:id', manage, controller.update);
   router.delete('/:id', manage, controller.remove);
