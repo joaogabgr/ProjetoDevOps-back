@@ -34,9 +34,10 @@ npm run dev            # API em modo watch
 
 O fluxo completo está no [Processo do PO](https://projetodevops.atlassian.net/wiki/spaces/VIGIA/pages/524289).
 
-- **Branch:** uma por subtarefa `[BACK]` do Jira, criada pelo botão *Create branch* a partir da `develop`. Ex.: `SCRUM-61-back-gravar-leituras`.
-- **Commit:** `SCRUM-61 feat: descrição curta`. A chave faz o commit aparecer no painel *Development* da subtarefa.
-- **PR:** título começando com a chave.
+- **Branch:** uma por subtarefa `[BACK]` do Jira, a partir da `develop`, com a chave e o requisito: `SCRUM-NN-rf-N-descricao`. Ex.: `SCRUM-57-rf-2-novos-campos-da-estacao`.
+- **Commit:** `SCRUM-57 feat: descrição curta`, ao menos dois por branch. A chave faz o commit aparecer no painel *Development* da subtarefa.
+- **PR:** o título é o nome da branch (o CI confere). No squash, a mensagem do commit na `develop` sai com esse nome.
+- **Regras:** `develop`, `homolog` e `main` só aceitam PR com o CI verde e a branch atualizada; a `main` também precisa de 1 aprovação.
 - **Merge:**
   - feature → `develop`: *Squash and merge*;
   - `develop` → `homolog` → `main`: *Create a merge commit*.
