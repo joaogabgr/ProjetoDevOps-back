@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Station } from '../../src/domain/entities/Station';
+import { Biome } from '../../src/domain/enums/Biome';
 import { NotFoundError } from '../../src/domain/errors/DomainError';
 import type {
   CreateStationData,
@@ -31,6 +32,11 @@ export class InMemoryStationRepository implements StationRepository {
     station.name = data.name;
     station.latitude = data.latitude;
     station.longitude = data.longitude;
+    station.biome = data.biome;
+    station.community = data.community;
+    station.timezone = data.timezone;
+    station.communicationTimeoutMinutes = data.communicationTimeoutMinutes;
+    station.active = true;
     station.createdAt = new Date();
     station.dateLastMeasure = null;
     station.parameters = data.parameters.map((parameter) => ({
@@ -86,6 +92,11 @@ export function buildStation(overrides: Partial<Station> = {}): Station {
   station.name = overrides.name ?? 'Estação de Teste';
   station.latitude = overrides.latitude ?? '-23.5505';
   station.longitude = overrides.longitude ?? '-46.6333';
+  station.biome = overrides.biome ?? Biome.PANTANAL;
+  station.community = overrides.community ?? 'São Benedito';
+  station.timezone = overrides.timezone ?? 'America/Campo_Grande';
+  station.communicationTimeoutMinutes = overrides.communicationTimeoutMinutes ?? 60;
+  station.active = overrides.active ?? true;
   station.createdAt = overrides.createdAt ?? new Date('2026-01-01T00:00:00.000Z');
   station.dateLastMeasure = overrides.dateLastMeasure ?? null;
   station.parameters = overrides.parameters;

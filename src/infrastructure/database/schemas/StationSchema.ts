@@ -1,5 +1,6 @@
 import { EntitySchema } from 'typeorm';
 import { Station } from '../../../domain/entities/Station';
+import { BIOMES } from '../../../domain/enums/Biome';
 import { bigintToNumber } from './transformers';
 
 export const StationSchema = new EntitySchema<Station>({
@@ -12,6 +13,11 @@ export const StationSchema = new EntitySchema<Station>({
     name: { type: 'varchar', length: 255 },
     latitude: { type: 'varchar', length: 64 },
     longitude: { type: 'varchar', length: 64 },
+    biome: { type: 'enum', enum: BIOMES, enumName: 'station_biome' },
+    community: { type: 'varchar', length: 120 },
+    timezone: { type: 'varchar', length: 64 },
+    communicationTimeoutMinutes: { name: 'communication_timeout_minutes', type: 'integer', default: 60 },
+    active: { type: 'boolean', default: true },
     createdAt: { name: 'created_at', type: 'timestamptz', createDate: true },
     dateLastMeasure: {
       name: 'date_last_measure',
@@ -39,5 +45,8 @@ export const StationSchema = new EntitySchema<Station>({
       inverseSide: 'station',
     },
   },
-  indices: [{ name: 'idx_stations_name', columns: ['name'] }],
+  indices: [
+    { name: 'idx_stations_name', columns: ['name'] },
+    { name: 'idx_stations_community', columns: ['community'] },
+  ],
 });

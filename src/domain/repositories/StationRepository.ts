@@ -1,4 +1,5 @@
 import type { Station } from '../entities/Station';
+import type { Biome } from '../enums/Biome';
 
 export interface StationListFilters {
   readonly page: number;
@@ -24,6 +25,10 @@ export interface CreateStationData {
   readonly name: string;
   readonly latitude: string;
   readonly longitude: string;
+  readonly biome: Biome;
+  readonly community: string;
+  readonly timezone: string;
+  readonly communicationTimeoutMinutes: number;
   readonly parameters: ReadonlyArray<StationParameterInput>;
 }
 

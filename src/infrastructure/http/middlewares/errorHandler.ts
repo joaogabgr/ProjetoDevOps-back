@@ -50,7 +50,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       error: {
         code: error.code,
         message: error.message,
-        ...(error instanceof ValidationError && error.details.length > 0
+        ...((error instanceof ValidationError || error instanceof ConflictError) && error.details.length > 0
           ? { details: error.details }
           : {}),
       },

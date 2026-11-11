@@ -28,7 +28,11 @@ export class NotFoundError extends DomainError {
 export class ConflictError extends DomainError {
   readonly code = 'CONFLICT';
 
-  constructor(message: string) {
+  /** `details` aponta o campo em conflito, para a tela mostrar a mensagem ao lado dele (RNF1). */
+  constructor(
+    message: string,
+    readonly details: ReadonlyArray<{ field: string; message: string }> = [],
+  ) {
     super(message);
   }
 }
