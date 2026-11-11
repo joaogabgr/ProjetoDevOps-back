@@ -8,7 +8,8 @@ import type {
   StationRepository,
   UpdateStationData,
 } from '../../../domain/repositories/StationRepository';
-import { StationSchema } from '../schemas';
+import type { Measure } from '../../../domain/entities/Measure';
+import { MeasureSchema, StationSchema } from '../schemas';
 
 /** Relações carregadas sempre que a estação é devolvida sozinha. */
 const DETAIL_RELATIONS = {
@@ -17,9 +18,11 @@ const DETAIL_RELATIONS = {
 
 export class TypeOrmStationRepository implements StationRepository {
   private readonly repository: Repository<Station>;
+  private readonly measures: Repository<Measure>;
 
   constructor(dataSource: DataSource) {
     this.repository = dataSource.getRepository(StationSchema);
+    this.measures = dataSource.getRepository(MeasureSchema);
   }
 
   async create(data: CreateStationData): Promise<Station> {
@@ -56,6 +59,15 @@ export class TypeOrmStationRepository implements StationRepository {
 
   async delete(id: string): Promise<void> {
     await this.repository.delete({ id });
+  }
+
+  async setActive(id: string, active: boolean): Promise<Station> {
+    await this.repository.update({ id }, { active });
+    return this.findByIdOrFail(id);
+  }
+
+  async countMeasures(id: string): Promise<number> {
+    return this.measures.count({ where: { parameter: { stationId: id } } });
   }
 
   async findById(id: string): Promise<Station | null> {

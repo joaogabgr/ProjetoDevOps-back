@@ -2,6 +2,7 @@ import type { DataSource } from 'typeorm';
 import type { TokenService } from '../domain/services/TokenService';
 import { GetCurrentUserUseCase } from '../application/use-cases/auth/GetCurrentUserUseCase';
 import { LoginUseCase } from '../application/use-cases/auth/LoginUseCase';
+import { ChangeStationStatusUseCase } from '../application/use-cases/station/ChangeStationStatusUseCase';
 import { CreateStationUseCase } from '../application/use-cases/station/CreateStationUseCase';
 import { DeleteStationUseCase } from '../application/use-cases/station/DeleteStationUseCase';
 import { GetStationUseCase } from '../application/use-cases/station/GetStationUseCase';
@@ -52,6 +53,7 @@ export function buildContainer(dataSource: DataSource): Container {
     new UpdateStationUseCase(stationRepository),
     new DeleteStationUseCase(stationRepository),
     new ListCommunitiesUseCase(stationRepository),
+    new ChangeStationStatusUseCase(stationRepository),
   );
 
   const typeParameterController = new TypeParameterController(

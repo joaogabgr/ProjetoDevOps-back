@@ -18,6 +18,12 @@ import type {
  */
 export class InMemoryStationRepository implements StationRepository {
   private readonly stations = new Map<string, Station>();
+  /** Leituras por estação; preencha com `recordMeasures`. */
+  private readonly measureCounts = new Map<string, number>();
+
+  recordMeasures(stationId: string, count: number): void {
+    this.measureCounts.set(stationId, count);
+  }
 
   async seed(stations: Station[]): Promise<void> {
     for (const station of stations) {
@@ -61,6 +67,19 @@ export class InMemoryStationRepository implements StationRepository {
 
   async delete(id: string): Promise<void> {
     this.stations.delete(id);
+  }
+
+  async setActive(id: string, active: boolean): Promise<Station> {
+    const station = this.stations.get(id);
+    if (!station) {
+      throw new NotFoundError('Estação', id);
+    }
+    station.active = active;
+    return station;
+  }
+
+  async countMeasures(id: string): Promise<number> {
+    return this.measureCounts.get(id) ?? 0;
   }
 
   async findById(id: string): Promise<Station | null> {
