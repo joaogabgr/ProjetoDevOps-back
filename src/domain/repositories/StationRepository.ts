@@ -57,6 +57,9 @@ export interface StationRepository {
   create(data: CreateStationData): Promise<Station>;
   update(id: string, data: UpdateStationData): Promise<Station>;
   delete(id: string): Promise<void>;
+  setActive(id: string, active: boolean): Promise<Station>;
+  /** Quantas leituras a estação já recebeu, somando todos os sensores. */
+  countMeasures(id: string): Promise<number>;
   findById(id: string): Promise<Station | null>;
   findByUuid(uuid: string): Promise<Station | null>;
   /** Comunidades distintas, em ordem alfabética (RF2 R3). */

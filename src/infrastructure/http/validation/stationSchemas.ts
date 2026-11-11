@@ -61,6 +61,10 @@ export const updateStationBodySchema = z
   })
   .refine((body) => Object.keys(body).length > 0, 'Informe ao menos um campo para atualizar.');
 
+export const stationStatusBodySchema = z.object({
+  active: z.boolean({ required_error: 'Informe active: true ou false.' }),
+});
+
 export const stationIdParamsSchema = z.object({
   id: z.string().uuid('Id de estação inválido.'),
 });
