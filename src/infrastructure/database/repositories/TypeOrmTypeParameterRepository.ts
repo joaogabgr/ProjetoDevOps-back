@@ -6,13 +6,16 @@ import type {
   TypeParameterRepository,
   UpdateTypeParameterData,
 } from '../../../domain/repositories/TypeParameterRepository';
-import { TypeParameterSchema } from '../schemas';
+import type { Parameter } from '../../../domain/entities/Parameter';
+import { ParameterSchema, TypeParameterSchema } from '../schemas';
 
 export class TypeOrmTypeParameterRepository implements TypeParameterRepository {
   private readonly repository: Repository<TypeParameter>;
+  private readonly stationParameters: Repository<Parameter>;
 
   constructor(dataSource: DataSource) {
     this.repository = dataSource.getRepository(TypeParameterSchema);
+    this.stationParameters = dataSource.getRepository(ParameterSchema);
   }
 
   async create(data: CreateTypeParameterData): Promise<TypeParameter> {
@@ -31,6 +34,14 @@ export class TypeOrmTypeParameterRepository implements TypeParameterRepository {
       throw new NotFoundError('Parâmetro', id);
     }
     return updated;
+  }
+
+  async delete(id: string): Promise<void> {
+    await this.repository.delete({ id });
+  }
+
+  async countStationLinks(id: string): Promise<number> {
+    return this.stationParameters.count({ where: { typeParameterId: id } });
   }
 
   async findByTypeJson(typeJson: string): Promise<TypeParameter | null> {
