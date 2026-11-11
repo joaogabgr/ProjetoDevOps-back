@@ -34,14 +34,14 @@ describe('GET /api/users (SCRUM-24 — RF5: listar usuários)', () => {
     const { app, userRepository } = buildTestApp();
     await userRepository.seed([
       buildUser({ name: 'Ana', email: 'ana@example.com', role: UserRole.ADMIN }),
-      buildUser({ name: 'Bruno', email: 'bruno@example.com', role: UserRole.EMPLOYEE }),
-      buildUser({ name: 'Carla', email: 'carla@example.com', role: UserRole.EMPLOYEE }),
-      buildUser({ name: 'Diego', email: 'diego@example.com', role: UserRole.EMPLOYEE }),
+      buildUser({ name: 'Bruno', email: 'bruno@example.com', role: UserRole.TECHNICIAN }),
+      buildUser({ name: 'Carla', email: 'carla@example.com', role: UserRole.TECHNICIAN }),
+      buildUser({ name: 'Diego', email: 'diego@example.com', role: UserRole.TECHNICIAN }),
     ]);
 
     const response = await request(app)
       .get('/api/users')
-      .query({ role: UserRole.EMPLOYEE, page: 2, perPage: 2 });
+      .query({ role: UserRole.TECHNICIAN, page: 2, perPage: 2 });
 
     expect(response.status).toBe(200);
     expect(response.body.data.map((u: { name: string }) => u.name)).toEqual(['Diego']);

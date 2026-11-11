@@ -9,6 +9,8 @@ export class User {
   password!: string;
   role!: UserRole;
   cpf!: string;
+  /** Só o Agente comunitário tem comunidade; os outros perfis veem todas (RF9). */
+  community!: string | null;
   createdAt!: Date;
   active!: boolean;
 
@@ -16,7 +18,11 @@ export class User {
     return this.role === UserRole.ADMIN;
   }
 
+  isCommunityAgent(): boolean {
+    return this.role === UserRole.COMMUNITY_AGENT;
+  }
+
   canOperate(): boolean {
-    return this.active && (this.role === UserRole.ADMIN || this.role === UserRole.EMPLOYEE);
+    return this.active && (this.role === UserRole.ADMIN || this.role === UserRole.TECHNICIAN);
   }
 }

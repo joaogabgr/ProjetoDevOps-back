@@ -14,7 +14,7 @@ describe('UpdateUserUseCase (SCRUM-25 — RF5: desativar usuário)', () => {
   });
 
   it('desativa um usuário comum', async () => {
-    const user = buildUser({ role: UserRole.EMPLOYEE });
+    const user = buildUser({ role: UserRole.TECHNICIAN });
     await repository.seed([user]);
 
     const updated = await useCase.execute(user.id, { active: false });

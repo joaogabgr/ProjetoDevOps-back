@@ -20,7 +20,7 @@ describe('PATCH /api/users/:id (SCRUM-23 — RF5: editar usuário)', () => {
 
   it('altera a permissão do usuário', async () => {
     const { app, userRepository } = buildTestApp();
-    const user = buildUser({ role: UserRole.EMPLOYEE });
+    const user = buildUser({ role: UserRole.TECHNICIAN });
     await userRepository.seed([user]);
 
     const response = await request(app)

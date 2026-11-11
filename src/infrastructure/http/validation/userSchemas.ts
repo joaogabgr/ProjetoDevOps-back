@@ -17,6 +17,7 @@ export const createUserBodySchema = z.object({
   role: z.nativeEnum(UserRole, {
     errorMap: () => ({ message: `role deve ser um dos valores: ${Object.values(UserRole).join(', ')}.` }),
   }),
+  community: z.string().trim().max(120, 'A comunidade deve ter no máximo 120 caracteres.').nullish(),
 });
 
 export const updateUserBodySchema = z
@@ -30,6 +31,7 @@ export const updateUserBodySchema = z
         }),
       })
       .optional(),
+    community: z.string().trim().max(120, 'A comunidade deve ter no máximo 120 caracteres.').nullable().optional(),
     active: z.boolean().optional(),
   })
   .refine((body) => Object.keys(body).length > 0, 'Informe ao menos um campo para atualizar.');
