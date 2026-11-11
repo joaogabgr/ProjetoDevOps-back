@@ -36,6 +36,10 @@ export interface UpdateStationData {
   readonly name?: string;
   readonly latitude?: string;
   readonly longitude?: string;
+  readonly biome?: Biome;
+  readonly community?: string;
+  readonly timezone?: string;
+  readonly communicationTimeoutMinutes?: number;
 }
 
 /**
