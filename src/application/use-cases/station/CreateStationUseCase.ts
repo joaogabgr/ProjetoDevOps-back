@@ -1,4 +1,5 @@
 import { ConflictError, ValidationError } from '../../../domain/errors/DomainError';
+import type { Biome } from '../../../domain/enums/Biome';
 import type { StationRepository } from '../../../domain/repositories/StationRepository';
 import type { TypeParameterRepository } from '../../../domain/repositories/TypeParameterRepository';
 import { toStationDTO, type StationDTO } from '../../dtos/StationDTO';
@@ -8,6 +9,10 @@ export interface CreateStationInput {
   readonly name: string;
   readonly latitude: string;
   readonly longitude: string;
+  readonly biome: Biome;
+  readonly community: string;
+  readonly timezone: string;
+  readonly communicationTimeoutMinutes: number;
   /** Tipos de grandeza que os sensores desta estação produzem (RF1). */
   readonly typeParameterIds: ReadonlyArray<string>;
 }
@@ -32,6 +37,10 @@ export class CreateStationUseCase {
       name: input.name,
       latitude: input.latitude,
       longitude: input.longitude,
+      biome: input.biome,
+      community: input.community,
+      timezone: input.timezone,
+      communicationTimeoutMinutes: input.communicationTimeoutMinutes,
       parameters: input.typeParameterIds.map((typeParameterId) => ({ typeParameterId })),
     });
 

@@ -28,6 +28,11 @@ export class TypeOrmStationRepository implements StationRepository {
       name: data.name,
       latitude: data.latitude,
       longitude: data.longitude,
+      biome: data.biome,
+      community: data.community,
+      timezone: data.timezone,
+      communicationTimeoutMinutes: data.communicationTimeoutMinutes,
+      active: true,
       dateLastMeasure: null,
       // `cascade: ['insert']` grava estação e parâmetros na mesma transação.
       parameters: data.parameters.map((parameter) => ({
