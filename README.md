@@ -9,7 +9,7 @@ API e serviços do sistema de monitoramento comunitário e prevenção de enchen
 | Requisitos, atas e processo do time | [Confluence – espaço Vigia das Águas](https://projetodevops.atlassian.net/wiki/spaces/VIGIA) |
 | Pipeline de CI/CD: jobs de cada ambiente e regras | [Confluence › Pipeline de CI/CD](https://projetodevops.atlassian.net/wiki/spaces/VIGIA/pages/491764) |
 | Modelo de dados | [Confluence › Modelo de dados](https://projetodevops.atlassian.net/wiki/spaces/VIGIA/pages/720910) |
-| Histórias e subtarefas | [Jira – projeto SCRUM](https://projetodevops.atlassian.net/jira/software/projects/SCRUM/boards/1) (componente **Backend**) |
+| Histórias e tarefas | [Jira – projeto SCRUM](https://projetodevops.atlassian.net/jira/software/projects/SCRUM/boards/1) (componente **Backend**) |
 | Front-end | [ProjetoDevOps-front](https://github.com/joaogabgr/ProjetoDevOps-front) |
 
 ## Como rodar
@@ -34,8 +34,8 @@ npm run dev            # API em modo watch
 
 O fluxo completo está no [Processo do PO](https://projetodevops.atlassian.net/wiki/spaces/VIGIA/pages/524289).
 
-- **Branch:** uma por subtarefa `[BACK]` do Jira, a partir da `develop`, com a chave e o requisito: `SCRUM-NN-rf-N-descricao`. Ex.: `SCRUM-57-rf-2-novos-campos-da-estacao`.
-- **Commit:** `SCRUM-57 feat: descrição curta`, ao menos dois por branch. A chave faz o commit aparecer no painel *Development* da subtarefa.
+- **Branch:** uma por tarefa `[BACK]` (componente Backend) do Jira, a partir da `develop`, com a chave e o requisito: `SCRUM-NN-rf-N-descricao`. Ex.: `SCRUM-57-rf-2-novos-campos-da-estacao`.
+- **Commit:** `SCRUM-57 feat: descrição curta`, ao menos dois por branch. A chave faz o commit aparecer no painel *Development* da tarefa.
 - **PR:** o título é o nome da branch (o CI confere). No squash, a mensagem do commit na `develop` sai com esse nome.
 - **Regras:** `develop`, `homolog` e `main` só aceitam PR com o CI verde e a branch atualizada; a `main` também precisa de 1 aprovação.
 - **Merge:**
