@@ -1,12 +1,14 @@
 import { ConflictError, NotFoundError } from '../../../domain/errors/DomainError';
-import type { UserRole } from '../../../domain/enums/UserRole';
+import { UserRole } from '../../../domain/enums/UserRole';
 import type { UserRepository } from '../../../domain/repositories/UserRepository';
 import { toUserDTO, type UserDTO } from '../../dtos/UserDTO';
+import { communityFor } from './CreateUserUseCase';
 
 export interface UpdateUserInput {
   readonly name?: string;
   readonly email?: string;
   readonly role?: UserRole;
+  readonly community?: string | null;
   readonly active?: boolean;
 }
 
@@ -24,10 +26,21 @@ export class UpdateUserUseCase {
       throw new NotFoundError('Usuário', id);
     }
 
+    const demoting = input.role !== undefined && input.role !== UserRole.ADMIN && current.active;
+    if (demoting && current.isAdmin() && (await this.users.countActiveAdmins()) <= 1) {
+      throw new ConflictError('Não é possível remover o último administrador ativo.');
+    }
+
     const deactivating = input.active === false && current.active;
     if (deactivating && current.isAdmin() && (await this.users.countActiveAdmins()) <= 1) {
       throw new ConflictError('Não é possível desativar o último administrador ativo.');
     }
+
+    const nextRole = input.role ?? current.role;
+    const community = communityFor(
+      nextRole,
+      input.community !== undefined ? input.community : current.community,
+    );
 
     const email = input.email ? input.email.trim().toLowerCase() : undefined;
 
@@ -39,6 +52,7 @@ export class UpdateUserUseCase {
       ...(input.name !== undefined ? { name: input.name.trim() } : {}),
       ...(email !== undefined ? { email } : {}),
       ...(input.role !== undefined ? { role: input.role } : {}),
+      ...(community !== current.community ? { community } : {}),
       ...(input.active !== undefined ? { active: input.active } : {}),
     });
 

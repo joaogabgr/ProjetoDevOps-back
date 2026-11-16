@@ -8,8 +8,22 @@ export interface CreateTypeParameterData {
   readonly numberOfDecimalCases: number;
 }
 
+export interface UpdateTypeParameterData {
+  readonly name?: string;
+  readonly unit?: string;
+  readonly numberOfDecimalCases?: number;
+}
+
 export interface TypeParameterRepository {
   create(data: CreateTypeParameterData): Promise<TypeParameter>;
+  update(id: string, data: UpdateTypeParameterData): Promise<TypeParameter>;
+  delete(id: string): Promise<void>;
+  /** Em quantas estações o parâmetro está instalado (RF1). */
+  countStationLinks(id: string): Promise<number>;
+  /** Quantas leituras existem desse parâmetro, em qualquer estação. */
+  countMeasures(id: string): Promise<number>;
+  /** Remove o parâmetro de todas as estações que o têm instalado (RF3 R5). */
+  unlinkFromStations(id: string): Promise<void>;
   findAll(): Promise<TypeParameter[]>;
   findById(id: string): Promise<TypeParameter | null>;
   findByTypeJson(typeJson: string): Promise<TypeParameter | null>;

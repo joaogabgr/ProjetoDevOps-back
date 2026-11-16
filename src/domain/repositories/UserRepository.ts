@@ -9,6 +9,8 @@ export interface UserListFilters {
   readonly role?: UserRole;
   /** Busca parcial por nome, case-insensitive. */
   readonly name?: string;
+  /** Comunidade exata do agente comunitário. */
+  readonly community?: string;
 }
 
 export interface CreateUserData {
@@ -18,6 +20,7 @@ export interface CreateUserData {
   readonly passwordHash: string;
   readonly cpf: string;
   readonly role: UserRole;
+  readonly community: string | null;
 }
 
 /**
@@ -31,6 +34,7 @@ export interface UpdateUserData {
   readonly name?: string;
   readonly email?: string;
   readonly role?: UserRole;
+  readonly community?: string | null;
   readonly active?: boolean;
 }
 
@@ -49,6 +53,8 @@ export interface UserRepository {
   countActiveAdmins(): Promise<number>;
   findById(id: string): Promise<User | null>;
   findByEmail(email: string): Promise<User | null>;
+  /** Igual a `findByEmail`, mas traz o hash da senha — só para o login. */
+  findByEmailWithPassword(email: string): Promise<User | null>;
   findByCpf(cpf: string): Promise<User | null>;
   list(filters: UserListFilters): Promise<Paginated<User>>;
 }

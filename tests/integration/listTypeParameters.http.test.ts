@@ -6,13 +6,13 @@ import {
   InMemoryTypeParameterRepository,
 } from '../fakes/InMemoryTypeParameterRepository';
 import { InMemoryUserRepository } from '../fakes/InMemoryUserRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 describe('GET /api/type-parameters (SCRUM-20 — RF3: listar parâmetros)', () => {
   it('retorna 200 com lista vazia quando não há parâmetros', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).get('/api/type-parameters');
+    const response = await request(app).get('/api/type-parameters').set(asAdmin);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toEqual([]);
@@ -25,7 +25,7 @@ describe('GET /api/type-parameters (SCRUM-20 — RF3: listar parâmetros)', () =
       new InMemoryTypeParameterRepository(buildBoardTypeParameters()),
     );
 
-    const response = await request(app).get('/api/type-parameters');
+    const response = await request(app).get('/api/type-parameters').set(asAdmin);
 
     expect(response.status).toBe(200);
     expect(response.body.data).toHaveLength(7);

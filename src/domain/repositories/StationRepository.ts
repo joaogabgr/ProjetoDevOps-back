@@ -1,10 +1,16 @@
 import type { Station } from '../entities/Station';
+import type { Biome } from '../enums/Biome';
 
 export interface StationListFilters {
   readonly page: number;
   readonly perPage: number;
   /** Busca parcial por nome, case-insensitive. */
   readonly name?: string;
+  readonly biome?: Biome;
+  /** Comunidade exata, como aparece na rota de comunidades. */
+  readonly community?: string;
+  /** `true` só ativas, `false` só desativadas. */
+  readonly active?: boolean;
 }
 
 export interface Paginated<T> {
@@ -24,6 +30,10 @@ export interface CreateStationData {
   readonly name: string;
   readonly latitude: string;
   readonly longitude: string;
+  readonly biome: Biome;
+  readonly community: string;
+  readonly timezone: string;
+  readonly communicationTimeoutMinutes: number;
   readonly parameters: ReadonlyArray<StationParameterInput>;
 }
 
@@ -31,6 +41,10 @@ export interface UpdateStationData {
   readonly name?: string;
   readonly latitude?: string;
   readonly longitude?: string;
+  readonly biome?: Biome;
+  readonly community?: string;
+  readonly timezone?: string;
+  readonly communicationTimeoutMinutes?: number;
 }
 
 /**
@@ -43,7 +57,12 @@ export interface StationRepository {
   create(data: CreateStationData): Promise<Station>;
   update(id: string, data: UpdateStationData): Promise<Station>;
   delete(id: string): Promise<void>;
+  setActive(id: string, active: boolean): Promise<Station>;
+  /** Quantas leituras a estação já recebeu, somando todos os sensores. */
+  countMeasures(id: string): Promise<number>;
   findById(id: string): Promise<Station | null>;
   findByUuid(uuid: string): Promise<Station | null>;
+  /** Comunidades distintas, em ordem alfabética (RF2 R3). */
+  listCommunities(): Promise<string[]>;
   list(filters: StationListFilters): Promise<Paginated<Station>>;
 }

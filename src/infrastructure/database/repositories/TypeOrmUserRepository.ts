@@ -25,6 +25,7 @@ export class TypeOrmUserRepository implements UserRepository {
       password: data.passwordHash,
       cpf: data.cpf,
       role: data.role,
+      community: data.community,
       active: true,
     });
 
@@ -62,6 +63,15 @@ export class TypeOrmUserRepository implements UserRepository {
     return this.repository.findOne({ where: { email } });
   }
 
+  async findByEmailWithPassword(email: string): Promise<User | null> {
+    // `password` tem `select: false` no schema: só vem quando pedido explicitamente.
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
+  }
+
   async findByCpf(cpf: string): Promise<User | null> {
     return this.repository.findOne({ where: { cpf } });
   }
@@ -70,6 +80,7 @@ export class TypeOrmUserRepository implements UserRepository {
     const where: FindOptionsWhere<User> = {};
     if (filters.role) where.role = filters.role;
     if (filters.name) where.name = ILike(`%${filters.name}%`);
+    if (filters.community) where.community = filters.community;
 
     const [items, total] = await this.repository.findAndCount({
       where,

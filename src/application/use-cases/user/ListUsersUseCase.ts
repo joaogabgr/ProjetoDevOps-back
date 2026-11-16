@@ -8,6 +8,7 @@ export interface ListUsersInput {
   readonly perPage: number;
   readonly role?: UserRole;
   readonly name?: string;
+  readonly community?: string;
 }
 
 /** Lista os usuários para o administrador conferir quem tem acesso (RF5). */

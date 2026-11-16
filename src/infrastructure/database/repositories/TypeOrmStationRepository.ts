@@ -1,4 +1,4 @@
-import { ILike, type DataSource, type Repository } from 'typeorm';
+import { ILike, type DataSource, type FindOptionsWhere, type Repository } from 'typeorm';
 import { Station } from '../../../domain/entities/Station';
 import { NotFoundError } from '../../../domain/errors/DomainError';
 import type {
@@ -8,7 +8,8 @@ import type {
   StationRepository,
   UpdateStationData,
 } from '../../../domain/repositories/StationRepository';
-import { StationSchema } from '../schemas';
+import type { Measure } from '../../../domain/entities/Measure';
+import { MeasureSchema, StationSchema } from '../schemas';
 
 /** Relações carregadas sempre que a estação é devolvida sozinha. */
 const DETAIL_RELATIONS = {
@@ -17,9 +18,11 @@ const DETAIL_RELATIONS = {
 
 export class TypeOrmStationRepository implements StationRepository {
   private readonly repository: Repository<Station>;
+  private readonly measures: Repository<Measure>;
 
   constructor(dataSource: DataSource) {
     this.repository = dataSource.getRepository(StationSchema);
+    this.measures = dataSource.getRepository(MeasureSchema);
   }
 
   async create(data: CreateStationData): Promise<Station> {
@@ -28,6 +31,11 @@ export class TypeOrmStationRepository implements StationRepository {
       name: data.name,
       latitude: data.latitude,
       longitude: data.longitude,
+      biome: data.biome,
+      community: data.community,
+      timezone: data.timezone,
+      communicationTimeoutMinutes: data.communicationTimeoutMinutes,
+      active: true,
       dateLastMeasure: null,
       // `cascade: ['insert']` grava estação e parâmetros na mesma transação.
       parameters: data.parameters.map((parameter) => ({
@@ -53,6 +61,15 @@ export class TypeOrmStationRepository implements StationRepository {
     await this.repository.delete({ id });
   }
 
+  async setActive(id: string, active: boolean): Promise<Station> {
+    await this.repository.update({ id }, { active });
+    return this.findByIdOrFail(id);
+  }
+
+  async countMeasures(id: string): Promise<number> {
+    return this.measures.count({ where: { parameter: { stationId: id } } });
+  }
+
   async findById(id: string): Promise<Station | null> {
     return this.repository.findOne({ where: { id }, relations: DETAIL_RELATIONS });
   }
@@ -61,9 +78,25 @@ export class TypeOrmStationRepository implements StationRepository {
     return this.repository.findOne({ where: { uuid }, relations: DETAIL_RELATIONS });
   }
 
+  async listCommunities(): Promise<string[]> {
+    const rows = await this.repository
+      .createQueryBuilder('station')
+      .select('DISTINCT station.community', 'community')
+      .orderBy('community', 'ASC')
+      .getRawMany<{ community: string }>();
+
+    return rows.map((row) => row.community);
+  }
+
   async list(filters: StationListFilters): Promise<Paginated<Station>> {
+    const where: FindOptionsWhere<Station> = {};
+    if (filters.name) where.name = ILike(`%${filters.name}%`);
+    if (filters.biome) where.biome = filters.biome;
+    if (filters.community) where.community = filters.community;
+    if (filters.active !== undefined) where.active = filters.active;
+
     const [items, total] = await this.repository.findAndCount({
-      where: filters.name ? { name: ILike(`%${filters.name}%`) } : {},
+      where,
       order: { name: 'ASC' },
       skip: (filters.page - 1) * filters.perPage,
       take: filters.perPage,
