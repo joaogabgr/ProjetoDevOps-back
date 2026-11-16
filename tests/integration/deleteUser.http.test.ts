@@ -2,7 +2,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { UserRole } from '../../src/domain/enums/UserRole';
 import { buildUser } from '../fakes/InMemoryUserRepository';
-import { buildTestApp } from '../helpers/buildTestApp';
+import { asAdmin, buildTestApp } from '../helpers/buildTestApp';
 
 describe('DELETE /api/users/:id (SCRUM-25 — RF5: excluir usuário)', () => {
   it('retorna 204 e remove o usuário', async () => {
@@ -10,7 +10,7 @@ describe('DELETE /api/users/:id (SCRUM-25 — RF5: excluir usuário)', () => {
     const user = buildUser();
     await userRepository.seed([user]);
 
-    const response = await request(app).delete(`/api/users/${user.id}`);
+    const response = await request(app).delete(`/api/users/${user.id}`).set(asAdmin);
 
     expect(response.status).toBe(204);
     expect(await userRepository.findById(user.id)).toBeNull();
@@ -21,7 +21,7 @@ describe('DELETE /api/users/:id (SCRUM-25 — RF5: excluir usuário)', () => {
     const admin = buildUser({ role: UserRole.ADMIN });
     await userRepository.seed([admin]);
 
-    const response = await request(app).delete(`/api/users/${admin.id}`);
+    const response = await request(app).delete(`/api/users/${admin.id}`).set(asAdmin);
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('CONFLICT');
@@ -32,7 +32,7 @@ describe('DELETE /api/users/:id (SCRUM-25 — RF5: excluir usuário)', () => {
     const admin = buildUser({ role: UserRole.ADMIN });
     await userRepository.seed([admin]);
 
-    const response = await request(app).patch(`/api/users/${admin.id}`).send({ active: false });
+    const response = await request(app).patch(`/api/users/${admin.id}`).set(asAdmin).send({ active: false });
 
     expect(response.status).toBe(409);
     expect(response.body.error.code).toBe('CONFLICT');
@@ -41,7 +41,7 @@ describe('DELETE /api/users/:id (SCRUM-25 — RF5: excluir usuário)', () => {
   it('retorna 404 quando o usuário não existe', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).delete('/api/users/00000000-0000-4000-8000-000000000000');
+    const response = await request(app).delete('/api/users/00000000-0000-4000-8000-000000000000').set(asAdmin);
 
     expect(response.status).toBe(404);
     expect(response.body.error.code).toBe('NOT_FOUND');
@@ -50,7 +50,7 @@ describe('DELETE /api/users/:id (SCRUM-25 — RF5: excluir usuário)', () => {
   it('retorna 422 quando o id não é um UUID', async () => {
     const { app } = buildTestApp();
 
-    const response = await request(app).delete('/api/users/abc');
+    const response = await request(app).delete('/api/users/abc').set(asAdmin);
 
     expect(response.status).toBe(422);
   });

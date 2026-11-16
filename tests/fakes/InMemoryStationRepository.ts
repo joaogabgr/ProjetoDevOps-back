@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { Station } from '../../src/domain/entities/Station';
+import { Biome } from '../../src/domain/enums/Biome';
 import { NotFoundError } from '../../src/domain/errors/DomainError';
 import type {
   CreateStationData,
@@ -17,6 +18,12 @@ import type {
  */
 export class InMemoryStationRepository implements StationRepository {
   private readonly stations = new Map<string, Station>();
+  /** Leituras por estação; preencha com `recordMeasures`. */
+  private readonly measureCounts = new Map<string, number>();
+
+  recordMeasures(stationId: string, count: number): void {
+    this.measureCounts.set(stationId, count);
+  }
 
   async seed(stations: Station[]): Promise<void> {
     for (const station of stations) {
@@ -31,6 +38,11 @@ export class InMemoryStationRepository implements StationRepository {
     station.name = data.name;
     station.latitude = data.latitude;
     station.longitude = data.longitude;
+    station.biome = data.biome;
+    station.community = data.community;
+    station.timezone = data.timezone;
+    station.communicationTimeoutMinutes = data.communicationTimeoutMinutes;
+    station.active = true;
     station.createdAt = new Date();
     station.dateLastMeasure = null;
     station.parameters = data.parameters.map((parameter) => ({
@@ -57,6 +69,19 @@ export class InMemoryStationRepository implements StationRepository {
     this.stations.delete(id);
   }
 
+  async setActive(id: string, active: boolean): Promise<Station> {
+    const station = this.stations.get(id);
+    if (!station) {
+      throw new NotFoundError('Estação', id);
+    }
+    station.active = active;
+    return station;
+  }
+
+  async countMeasures(id: string): Promise<number> {
+    return this.measureCounts.get(id) ?? 0;
+  }
+
   async findById(id: string): Promise<Station | null> {
     return this.stations.get(id) ?? null;
   }
@@ -65,11 +90,19 @@ export class InMemoryStationRepository implements StationRepository {
     return [...this.stations.values()].find((station) => station.uuid === uuid) ?? null;
   }
 
+  async listCommunities(): Promise<string[]> {
+    const communities = new Set([...this.stations.values()].map((station) => station.community));
+    return [...communities].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+  }
+
   async list(filters: StationListFilters): Promise<Paginated<Station>> {
     const nameFilter = filters.name?.toLowerCase();
 
     const filtered = [...this.stations.values()]
       .filter((station) => !nameFilter || station.name.toLowerCase().includes(nameFilter))
+      .filter((station) => !filters.biome || station.biome === filters.biome)
+      .filter((station) => !filters.community || station.community === filters.community)
+      .filter((station) => filters.active === undefined || station.active === filters.active)
       .sort((a, b) => a.name.localeCompare(b.name));
 
     const start = (filters.page - 1) * filters.perPage;
@@ -86,6 +119,11 @@ export function buildStation(overrides: Partial<Station> = {}): Station {
   station.name = overrides.name ?? 'Estação de Teste';
   station.latitude = overrides.latitude ?? '-23.5505';
   station.longitude = overrides.longitude ?? '-46.6333';
+  station.biome = overrides.biome ?? Biome.PANTANAL;
+  station.community = overrides.community ?? 'São Benedito';
+  station.timezone = overrides.timezone ?? 'America/Campo_Grande';
+  station.communicationTimeoutMinutes = overrides.communicationTimeoutMinutes ?? 60;
+  station.active = overrides.active ?? true;
   station.createdAt = overrides.createdAt ?? new Date('2026-01-01T00:00:00.000Z');
   station.dateLastMeasure = overrides.dateLastMeasure ?? null;
   station.parameters = overrides.parameters;

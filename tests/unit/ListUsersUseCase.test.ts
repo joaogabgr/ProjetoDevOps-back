@@ -48,7 +48,7 @@ describe('ListUsersUseCase (SCRUM-24 — RF5: listar usuários)', () => {
   it('filtra por perfil', async () => {
     await repository.seed([
       buildUser({ name: 'Ana', email: 'ana@example.com', role: UserRole.ADMIN }),
-      buildUser({ name: 'Bruno', email: 'bruno@example.com', role: UserRole.EMPLOYEE }),
+      buildUser({ name: 'Bruno', email: 'bruno@example.com', role: UserRole.TECHNICIAN }),
     ]);
 
     const result = await useCase.execute({ page: 1, perPage: 20, role: UserRole.ADMIN });

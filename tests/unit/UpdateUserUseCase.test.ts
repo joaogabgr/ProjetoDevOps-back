@@ -23,7 +23,7 @@ describe('UpdateUserUseCase (SCRUM-23 — RF5: editar usuário)', () => {
   });
 
   it('altera a permissão (role) do usuário', async () => {
-    const user = buildUser({ role: UserRole.EMPLOYEE });
+    const user = buildUser({ role: UserRole.TECHNICIAN });
     await repository.seed([user]);
 
     const result = await useCase.execute(user.id, { role: UserRole.ADMIN });
@@ -61,13 +61,13 @@ describe('UpdateUserUseCase (SCRUM-23 — RF5: editar usuário)', () => {
   });
 
   it('permite atualização parcial mantendo os demais campos intactos', async () => {
-    const user = buildUser({ name: 'Nome Original', role: UserRole.EMPLOYEE, active: true });
+    const user = buildUser({ name: 'Nome Original', role: UserRole.TECHNICIAN, active: true });
     await repository.seed([user]);
 
     const result = await useCase.execute(user.id, { name: 'Nome Modificado' });
 
     expect(result.name).toBe('Nome Modificado');
-    expect(result.role).toBe(UserRole.EMPLOYEE);
+    expect(result.role).toBe(UserRole.TECHNICIAN);
     expect(result.active).toBe(true);
   });
 

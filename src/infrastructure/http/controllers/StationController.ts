@@ -1,13 +1,16 @@
 import type { Request, Response } from 'express';
+import type { ChangeStationStatusUseCase } from '../../../application/use-cases/station/ChangeStationStatusUseCase';
 import type { CreateStationUseCase } from '../../../application/use-cases/station/CreateStationUseCase';
 import type { DeleteStationUseCase } from '../../../application/use-cases/station/DeleteStationUseCase';
 import type { GetStationUseCase } from '../../../application/use-cases/station/GetStationUseCase';
+import type { ListCommunitiesUseCase } from '../../../application/use-cases/station/ListCommunitiesUseCase';
 import type { ListStationsUseCase } from '../../../application/use-cases/station/ListStationsUseCase';
 import type { UpdateStationUseCase } from '../../../application/use-cases/station/UpdateStationUseCase';
 import {
   createStationBodySchema,
   listStationsQuerySchema,
   stationIdParamsSchema,
+  stationStatusBodySchema,
   updateStationBodySchema,
 } from '../validation/stationSchemas';
 
@@ -25,6 +28,8 @@ export class StationController {
     private readonly getStation: GetStationUseCase,
     private readonly updateStation: UpdateStationUseCase,
     private readonly deleteStation: DeleteStationUseCase,
+    private readonly listCommunities: ListCommunitiesUseCase,
+    private readonly changeStationStatus: ChangeStationStatusUseCase,
   ) {}
 
   create = async (req: Request, res: Response): Promise<void> => {
@@ -45,6 +50,10 @@ export class StationController {
     });
   };
 
+  communities = async (_req: Request, res: Response): Promise<void> => {
+    res.status(200).json({ data: await this.listCommunities.execute() });
+  };
+
   getById = async (req: Request, res: Response): Promise<void> => {
     const { id } = stationIdParamsSchema.parse(req.params);
     const station = await this.getStation.execute(id);
@@ -56,6 +65,14 @@ export class StationController {
     const { id } = stationIdParamsSchema.parse(req.params);
     const body = updateStationBodySchema.parse(req.body);
     const station = await this.updateStation.execute(id, body);
+
+    res.status(200).json({ data: station });
+  };
+
+  changeStatus = async (req: Request, res: Response): Promise<void> => {
+    const { id } = stationIdParamsSchema.parse(req.params);
+    const { active } = stationStatusBodySchema.parse(req.body);
+    const station = await this.changeStationStatus.execute(id, active);
 
     res.status(200).json({ data: station });
   };

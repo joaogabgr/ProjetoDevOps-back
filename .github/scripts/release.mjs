@@ -38,10 +38,11 @@ const commits = sh('git', ['log', range, '--format=%s%x1f%b%x1e'])
   .split('\x1e').map((c) => c.trim()).filter(Boolean)
   .map((c) => { const [subject, body = ''] = c.split('\x1f'); return { subject, body }; });
 
-// 2. Chaves do Jira: na mensagem do commit ou, se faltar, no título e na branch do PR (#N)
+// 2. Chaves do Jira: no título do commit e no título e na branch do PR (#N).
+// O corpo fica de fora: ele traz a descrição do PR, que pode citar outras issues ("depende do SCRUM-26").
 const keys = new Set();
-for (const { subject, body } of commits) {
-  for (const k of `${subject}\n${body}`.match(KEY_RE) ?? []) keys.add(k);
+for (const { subject } of commits) {
+  for (const k of subject.match(KEY_RE) ?? []) keys.add(k);
   const pr = subject.match(/\(#(\d+)\)\s*$/)?.[1];
   if (pr) {
     const info = shOrNull('gh', ['api', `repos/${GITHUB_REPOSITORY}/pulls/${pr}`, '--jq', '.title + " " + .head.ref']);
@@ -64,14 +65,24 @@ else if (lastTag) {
 } else version = '0.1.0';
 const tag = `v${version}`;
 
-// 4. Histórias no Jira, agrupadas pelo épico (RF)
-const { issues } = await jira('POST', '/rest/api/3/search/jql', {
-  jql: `key in (${[...keys].join(',')})`,
-  fields: ['summary', 'issuetype', 'parent'],
+// 4. Histórias no Jira, agrupadas pelo épico (RF).
+// A branch é da tarefa [BACK]/[FRONT]; quem entra na release é a história de que ela "faz parte"
+// (link Composição). Subtarefas antigas sobem para a história pai.
+const search = async (keyList) => (await jira('POST', '/rest/api/3/search/jql', {
+  jql: `key in (${keyList.join(',')})`,
+  fields: ['summary', 'issuetype', 'parent', 'issuelinks'],
   maxResults: 100,
-});
+})).issues;
+const found = await search([...keys]);
+const storyOf = (i) => {
+  if (i.fields.issuetype.subtask) return i.fields.parent.key;
+  const partOf = i.fields.issuelinks?.find((l) => l.type.name === 'Composição' && l.outwardIssue);
+  return partOf ? partOf.outwardIssue.key : i.key;
+};
+const storyKeys = new Set(found.map(storyOf));
 // Só entram histórias ligadas a um requisito (épico RF). Tarefas técnicas ficam no link de mudanças técnicas.
-const stories = issues.filter((i) => i.fields.issuetype.name !== 'Epic' && /^RF\d+/.test(i.fields.parent?.fields?.summary ?? ''));
+const stories = (await search([...storyKeys]))
+  .filter((i) => i.fields.issuetype.name !== 'Epic' && /^RF\d+/.test(i.fields.parent?.fields?.summary ?? ''));
 if (!stories.length) {
   console.log('Nenhuma história de requisito nos commits. Release não criada.');
   return;
@@ -102,7 +113,7 @@ for (const [rf, list] of [...groups].sort((a, b) => rfNumber(a[0]) - rfNumber(b[
   lines.push('');
 }
 lines.push(
-  `Situação de todos os requisitos: [ENTREGAS.md](https://github.com/joaogabgr/ProjetoDevOps/blob/main/ENTREGAS.md)`,
+  `Situação de todos os requisitos: [portal de entregas](https://joaogabgr.github.io/ProjetoDevOps/)`,
   '',
   lastTag ? `Mudanças técnicas: https://github.com/${GITHUB_REPOSITORY}/compare/${lastTag}...${tag}` : '',
 );
