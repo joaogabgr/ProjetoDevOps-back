@@ -1,0 +1,100 @@
+name: Deploy
+
+# Publica a API no Cloud Run a cada merge na homolog (RNF4).
+# Roda o CI inteiro de novo sobre o código mesclado e só publica se ele passar:
+# imagem → migrations (Cloud Run Job) → nova revisão → smoke em /api/health.
+# Configuração da nuvem: infra/README.md. Arquitetura: Confluence › Deploy e ambientes.
+on:
+  push:
+    branches: [homolog]
+
+permissions:
+  contents: read
+  id-token: write # Workload Identity Federation: o Google confia no token do GitHub, sem chave guardada
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  deploy:
+    needs: ci
+    # Enquanto a nuvem não está configurada (infra/setup-gcp.sh), o deploy é pulado e o pipeline segue verde.
+    if: vars.GCP_PROJECT_ID != ''
+    runs-on: ubuntu-latest
+    environment:
+      name: homolog
+      url: ${{ steps.publicar.outputs.url }}
+    env:
+      AMBIENTE: homolog
+      SERVICE: vigia-api-homolog
+      MAX_INSTANCES: 1
+      REGION: ${{ vars.GCP_REGION }}
+      IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/vigia/api:${{ github.sha }}
+      RUNTIME_SA: vigia-runtime@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+      # Variáveis do GitHub Environment. CLOUD_SQL_INSTANCE só existe depois da migração para o Cloud SQL.
+      ENV_VARS: NODE_ENV=production,DB_HOST=${{ vars.DB_HOST }},DB_PORT=${{ vars.DB_PORT || '5432' }},DB_USER=${{ vars.DB_USER }},DB_NAME=${{ vars.DB_NAME }},DB_SSL=${{ vars.DB_SSL || 'true' }}
+      SECRETS: DB_PASSWORD=vigia-homolog-db-password:latest,JWT_SECRET=vigia-homolog-jwt-secret:latest
+      CLOUD_SQL_INSTANCE: ${{ vars.CLOUD_SQL_INSTANCE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Imagem no Artifact Registry
+        run: |
+          gcloud auth configure-docker "$REGION-docker.pkg.dev" --quiet
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      # Se as migrations falharem, o workflow para aqui e a API no ar continua a anterior.
+      - name: Migrations
+        run: |
+          extra=()
+          if [ -n "$CLOUD_SQL_INSTANCE" ]; then extra+=(--set-cloudsql-instances "$CLOUD_SQL_INSTANCE"); fi
+          gcloud run jobs deploy "vigia-migrate-$AMBIENTE" --image "$IMAGE" --region "$REGION" \
+            --service-account "$RUNTIME_SA" \
+            --command node \
+            --args node_modules/typeorm/cli.js,migration:run,-d,dist/infrastructure/database/data-source.js \
+            --set-env-vars "$ENV_VARS" --set-secrets "$SECRETS" "${extra[@]}" \
+            --max-retries 0 --task-timeout 300s --quiet
+          gcloud run jobs execute "vigia-migrate-$AMBIENTE" --region "$REGION" --wait
+
+      # Configuração da página Deploy e ambientes: 1 vCPU, 512 MiB, desliga quando parada.
+      - name: Publicar no Cloud Run
+        id: publicar
+        run: |
+          extra=()
+          if [ -n "$CLOUD_SQL_INSTANCE" ]; then extra+=(--set-cloudsql-instances "$CLOUD_SQL_INSTANCE"); fi
+          gcloud run deploy "$SERVICE" --image "$IMAGE" --region "$REGION" \
+            --service-account "$RUNTIME_SA" --allow-unauthenticated \
+            --cpu 1 --memory 512Mi --min-instances 0 --max-instances "$MAX_INSTANCES" \
+            --concurrency 80 --timeout 60s --cpu-throttling \
+            --set-env-vars "$ENV_VARS,APP_VERSION=$GITHUB_SHA" --set-secrets "$SECRETS" "${extra[@]}" \
+            --quiet
+          echo "url=$(gcloud run services describe "$SERVICE" --region "$REGION" --format 'value(status.url)')" >> "$GITHUB_OUTPUT"
+
+      # RNF4 R4: se a API publicada não responder com o banco ok e a versão nova, a publicação falha.
+      - name: Smoke
+        env:
+          URL: ${{ steps.publicar.outputs.url }}
+        run: |
+          for i in $(seq 1 12); do
+            body=$(curl -sS --max-time 10 "$URL/api/health" || true)
+            if echo "$body" | grep -q '"db":"ok"' && echo "$body" | grep -q "\"version\":\"$GITHUB_SHA\""; then
+              echo "$body"
+              echo "API de $AMBIENTE no ar: $URL (versão $GITHUB_SHA)" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::$URL/api/health não respondeu db ok com a versão $GITHUB_SHA em 60 s. Última resposta: $body"
+          exit 1
