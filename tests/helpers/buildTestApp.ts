@@ -50,6 +50,8 @@ export function buildTestApp(
   stationRepository = new InMemoryStationRepository(),
   userRepository = new InMemoryUserRepository(),
   typeParameterRepository = new InMemoryTypeParameterRepository(),
+  /** Banco "no ar" por padrão; o teste da rota de saúde troca por um que falha. */
+  checkDatabase: () => Promise<void> = async () => {},
 ): {
   app: Express;
   stationRepository: InMemoryStationRepository;
@@ -82,6 +84,7 @@ export function buildTestApp(
       new ListUsersUseCase(userRepository),
       new DeleteUserUseCase(userRepository),
     ),
+    checkDatabase,
   };
 
   return { app: createApp(container), stationRepository, userRepository };

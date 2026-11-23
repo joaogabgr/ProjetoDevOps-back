@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import type { Container } from '../../../main/container';
+import { env } from '../../config/env';
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
 import { buildAuthRoutes } from './auth.routes';
@@ -10,8 +11,15 @@ import { buildUserRoutes } from './user.routes';
 export function buildRoutes(container: Container): Router {
   const router = Router();
 
-  router.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', uptime: process.uptime() });
+  // Pública. O teste depois de publicar confere aqui se a API alcança o banco
+  // e se a versão no ar é a que acabou de ser publicada (SCRUM-251).
+  router.get('/health', async (_req, res) => {
+    try {
+      await container.checkDatabase();
+      res.status(200).json({ status: 'ok', db: 'ok', version: env.APP_VERSION, uptime: process.uptime() });
+    } catch {
+      res.status(503).json({ status: 'erro', db: 'fora', version: env.APP_VERSION });
+    }
   });
 
   const requireLogin = authenticate(container.tokenService);
