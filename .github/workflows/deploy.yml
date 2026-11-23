@@ -1,16 +1,16 @@
 name: Deploy
 
-# Publica a API no Cloud Run a cada merge na homolog (RNF4).
+# Publica a API no Cloud Run a cada merge na homolog (homologação) e na main (produção) (RNF4).
+# Na main, a release só é criada depois que a produção passa no smoke.
 # Roda o CI inteiro de novo sobre o código mesclado e só publica se ele passar:
 # imagem → migrations (Cloud Run Job) → nova revisão → smoke em /api/health.
 # Configuração da nuvem: infra/README.md. Arquitetura: Confluence › Deploy e ambientes.
 on:
   push:
-    branches: [homolog]
+    branches: [homolog, main]
 
 permissions:
   contents: read
-  id-token: write # Workload Identity Federation: o Google confia no token do GitHub, sem chave guardada
 
 concurrency:
   group: deploy-${{ github.ref_name }}
@@ -25,19 +25,22 @@ jobs:
     # Enquanto a nuvem não está configurada (infra/setup-gcp.sh), o deploy é pulado e o pipeline segue verde.
     if: vars.GCP_PROJECT_ID != ''
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # Workload Identity Federation: o Google confia no token do GitHub, sem chave guardada
     environment:
-      name: homolog
+      name: ${{ github.ref_name == 'main' && 'production' || 'homolog' }}
       url: ${{ steps.publicar.outputs.url }}
     env:
-      AMBIENTE: homolog
-      SERVICE: vigia-api-homolog
-      MAX_INSTANCES: 1
+      AMBIENTE: ${{ github.ref_name == 'main' && 'production' || 'homolog' }}
+      SERVICE: ${{ github.ref_name == 'main' && 'vigia-api' || 'vigia-api-homolog' }}
+      MAX_INSTANCES: ${{ github.ref_name == 'main' && 2 || 1 }}
       REGION: ${{ vars.GCP_REGION }}
       IMAGE: ${{ vars.GCP_REGION }}-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/vigia/api:${{ github.sha }}
       RUNTIME_SA: vigia-runtime@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com
       # Variáveis do GitHub Environment. CLOUD_SQL_INSTANCE só existe depois da migração para o Cloud SQL.
       ENV_VARS: NODE_ENV=production,DB_HOST=${{ vars.DB_HOST }},DB_PORT=${{ vars.DB_PORT || '5432' }},DB_USER=${{ vars.DB_USER }},DB_NAME=${{ vars.DB_NAME }},DB_SSL=${{ vars.DB_SSL || 'true' }}
-      SECRETS: DB_PASSWORD=vigia-homolog-db-password:latest,JWT_SECRET=vigia-homolog-jwt-secret:latest
+      SECRETS: DB_PASSWORD=vigia-${{ github.ref_name == 'main' && 'production' || 'homolog' }}-db-password:latest,JWT_SECRET=vigia-${{ github.ref_name == 'main' && 'production' || 'homolog' }}-jwt-secret:latest
       CLOUD_SQL_INSTANCE: ${{ vars.CLOUD_SQL_INSTANCE }}
     steps:
       - uses: actions/checkout@v4
@@ -98,3 +101,4 @@ jobs:
           done
           echo "::error::$URL/api/health não respondeu db ok com a versão $GITHUB_SHA em 60 s. Última resposta: $body"
           exit 1
+

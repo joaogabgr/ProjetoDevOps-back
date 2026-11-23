@@ -2,12 +2,12 @@ name: CI
 
 # Verificação de todo PR e de todo merge (RNF3). Os jobs titulo, typecheck, testes
 # e build são verificações obrigatórias nas branches develop, homolog e main.
-# No merge na homolog, quem roda este CI é o deploy.yml, antes de publicar.
+# No merge na homolog e na main, quem roda este CI é o deploy.yml, antes de publicar.
 on:
   pull_request:
     branches: [develop, homolog, main]
   push:
-    branches: [develop, main]
+    branches: [develop]
   workflow_call:
 
 concurrency:
