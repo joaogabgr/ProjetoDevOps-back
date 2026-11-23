@@ -4,7 +4,7 @@ Como preparar a nuvem para o deploy automático. A arquitetura, o dimensionament
 
 | Parte | Serviço |
 |---|---|
-| API | Google Cloud Run (`vigia-api-homolog`, `vigia-api`), região `us-east1` |
+| API | Google Cloud Run (`vigia-api-homolog`, `vigia-api`), região `southamerica-east1` |
 | Migrations | Cloud Run Job (`vigia-migrate-homolog`, `vigia-migrate-production`) |
 | Front | Firebase Hosting, um site por ambiente, com `/api` repassado ao Cloud Run |
 | Banco | Supabase (fase 1, temporário) e depois Cloud SQL para PostgreSQL (fase 2) |
@@ -14,7 +14,7 @@ Como preparar a nuvem para o deploy automático. A arquitetura, o dimensionament
 ## 1. Antes do script (à mão)
 
 1. **Projeto no Google Cloud:** em [console.cloud.google.com](https://console.cloud.google.com), crie o projeto (ex.: `vigia-aguas`) e ligue a uma conta de faturamento (*Faturamento › Vincular conta*). O Cloud Run exige faturamento mesmo dentro da cota grátis; o alerta de orçamento do script avisa se algo sair dela.
-2. **Supabase:** em [supabase.com](https://supabase.com), crie os projetos `vigia-homolog` e `vigia`, região **East US (North Virginia)**. Em cada um, abra *Project Settings › Database › Connection pooling*, modo **Session** (porta 5432), e anote host, usuário e senha. A conexão direta do Supabase é só IPv6 e o Cloud Run não alcança; por isso o pooler.
+2. **Supabase:** em [supabase.com](https://supabase.com), crie o projeto na região **South America (São Paulo)**, a mesma da API. A produção usa o banco `postgres` e a homologação, um banco `vigia_homolog` criado no mesmo projeto (`create database vigia_homolog;`), porque o plano grátis tem só 2 projetos. Os dois dividem os 500 MB. Em *Project Settings › Database › Connection pooling*, modo **Session** (porta 5432), anote host, usuário e senha. A conexão direta do Supabase é só IPv6 e o Cloud Run não alcança; por isso o pooler.
 3. **GitHub CLI (opcional):** se o `gh` estiver logado no terminal onde o script roda, ele grava as variáveis nos repositórios. Senão, o script imprime o que cadastrar à mão.
 
 ## 2. Rodar o script
@@ -27,12 +27,12 @@ cd ProjetoDevOps-back
 PROJECT_ID=vigia-aguas BILLING_ACCOUNT=XXXXXX-XXXXXX-XXXXXX bash infra/setup-gcp.sh
 ```
 
-`BILLING_ACCOUNT` aparece em *Faturamento › Gerenciamento de contas*. O script pergunta host, usuário, banco e senha do Supabase de cada ambiente.
+`BILLING_ACCOUNT` aparece em *Faturamento › Gerenciamento de contas*. O script pergunta host, usuário, banco e senha do Supabase de cada ambiente. Sem terminal interativo (ou no Git Bash do Windows, com o gcloud instalado), passe por variável: `HOMOLOG_DB_HOST`, `HOMOLOG_DB_USER`, `HOMOLOG_DB_NAME`, `HOMOLOG_DB_PASSWORD` e o mesmo com `PRODUCTION_`.
 
 | Variável | Padrão | Para quê |
 |---|---|---|
 | `PROJECT_ID` | obrigatória | Projeto do Google Cloud |
-| `REGION` | `us-east1` | Região do Cloud Run e das imagens |
+| `REGION` | `southamerica-east1` | Região do Cloud Run e das imagens |
 | `BILLING_ACCOUNT` | vazia | Cria o alerta de orçamento |
 | `BUDGET_USD` | `1` | Valor do alerta, em dólares |
 | `PRODUCTION_SITE` / `HOMOLOG_SITE` | `<projeto>` / `<projeto>-homolog` | Sites do Firebase (o nome é global; troque se estiver em uso) |
@@ -65,7 +65,7 @@ Se o Firebase não ativar pelo script (conta que nunca usou o Firebase precisa a
 Rode no seu computador, com o `.env` apontando para o banco do ambiente (dados do pooler do Supabase):
 
 ```bash
-DB_HOST=aws-0-us-east-1.pooler.supabase.com DB_PORT=5432 DB_USER=postgres.abcdefghijkl \
+DB_HOST=aws-0-sa-east-1.pooler.supabase.com DB_PORT=5432 DB_USER=postgres.abcdefghijkl \
 DB_PASSWORD=... DB_NAME=postgres DB_SSL=true \
 ADMIN_NAME="Ricardo Almeida" ADMIN_EMAIL=ricardo@vigia.org ADMIN_PASSWORD=... ADMIN_CPF=... \
 npm run seed:admin
@@ -75,10 +75,10 @@ npm run seed:admin
 
 | Tarefa | Comando |
 |---|---|
-| Ver os logs da API | `gcloud run services logs read vigia-api --region us-east1 --limit 100` |
-| Ver as revisões publicadas | `gcloud run revisions list --service vigia-api --region us-east1` |
-| Voltar para a revisão anterior (emergência) | `gcloud run services update-traffic vigia-api --region us-east1 --to-revisions <revisão>=100` |
-| Rodar as migrations de novo | `gcloud run jobs execute vigia-migrate-production --region us-east1 --wait` |
+| Ver os logs da API | `gcloud run services logs read vigia-api --region southamerica-east1 --limit 100` |
+| Ver as revisões publicadas | `gcloud run revisions list --service vigia-api --region southamerica-east1` |
+| Voltar para a revisão anterior (emergência) | `gcloud run services update-traffic vigia-api --region southamerica-east1 --to-revisions <revisão>=100` |
+| Rodar as migrations de novo | `gcloud run jobs execute vigia-migrate-production --region southamerica-east1 --wait` |
 | Trocar a senha do banco | `printf '%s' 'nova-senha' \| gcloud secrets versions add vigia-production-db-password --data-file -` e publicar de novo (*Actions › Deploy › Re-run*) |
 | Backup do banco (fase 1) | `pg_dump "postgresql://<usuário>:<senha>@<host>:5432/postgres" -Fc -f vigia-$(date +%F).dump` |
 
@@ -91,7 +91,7 @@ Quando o banco de produção passar de 400 MB ou a ONG aprovar o custo (~R$ 55 a
 ```bash
 gcloud services enable sqladmin.googleapis.com
 gcloud sql instances create vigia --database-version POSTGRES_16 --tier db-f1-micro \
-  --region us-east1 --storage-size 10 --storage-auto-increase --backup-start-time 06:00
+  --region southamerica-east1 --storage-size 10 --storage-auto-increase --backup-start-time 06:00
 gcloud sql databases create vigia --instance vigia
 gcloud sql databases create vigia_homolog --instance vigia
 gcloud sql users create vigia --instance vigia --password '<senha>'
@@ -100,6 +100,6 @@ gcloud sql users create vigia --instance vigia --password '<senha>'
 1. Pare a ponte do gateway (as leituras esperam na fila da placa).
 2. Copie os dados: `pg_dump` do Supabase e `pg_restore` no Cloud SQL, pelo [Cloud SQL Auth Proxy](https://cloud.google.com/sql/docs/postgres/sql-proxy).
 3. Atualize o segredo `vigia-<ambiente>-db-password` com a senha nova.
-4. No GitHub Environment do back: `CLOUD_SQL_INSTANCE=<projeto>:us-east1:vigia`, `DB_HOST=/cloudsql/<projeto>:us-east1:vigia`, `DB_SSL=false`, `DB_USER=vigia`, `DB_NAME=vigia` (ou `vigia_homolog`).
+4. No GitHub Environment do back: `CLOUD_SQL_INSTANCE=<projeto>:southamerica-east1:vigia`, `DB_HOST=/cloudsql/<projeto>:southamerica-east1:vigia`, `DB_SSL=false`, `DB_USER=vigia`, `DB_NAME=vigia` (ou `vigia_homolog`).
 5. *Actions › Deploy › Re-run*: o workflow liga o Cloud Run ao Cloud SQL quando `CLOUD_SQL_INSTANCE` existe.
 6. Confira `/api/health` com `db: ok`, religue a ponte e desligue o projeto Supabase depois de uma semana.

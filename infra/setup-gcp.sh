@@ -10,7 +10,7 @@
 set -euo pipefail
 
 PROJECT_ID="${PROJECT_ID:?Defina PROJECT_ID, ex.: PROJECT_ID=vigia-aguas bash infra/setup-gcp.sh}"
-REGION="${REGION:-us-east1}"
+REGION="${REGION:-southamerica-east1}"          # mesma região do banco no Supabase (São Paulo)
 GITHUB_OWNER="${GITHUB_OWNER:-joaogabgr}"
 BACK_REPO="$GITHUB_OWNER/ProjetoDevOps-back"
 FRONT_REPO="$GITHUB_OWNER/ProjetoDevOps-front"
@@ -32,12 +32,21 @@ PROVIDER="$POOL/providers/github"
 
 # ---------------------------------------------------------------- dados do banco
 # Supabase (fase 1): Project Settings › Database › Connection pooling, modo "Session" (porta 5432).
+# Sem terminal interativo, passe por variável: HOMOLOG_DB_HOST, HOMOLOG_DB_USER, HOMOLOG_DB_NAME,
+# HOMOLOG_DB_PASSWORD e o mesmo com PRODUCTION_.
 declare -A DB_HOST DB_USER DB_NAME DB_PASSWORD
 for env in "${AMBIENTES[@]}"; do
+  prefix="${env^^}"
+  host_var="${prefix}_DB_HOST"; user_var="${prefix}_DB_USER"; name_var="${prefix}_DB_NAME"; pass_var="${prefix}_DB_PASSWORD"
+  if [ -n "${!host_var:-}" ]; then
+    DB_HOST[$env]="${!host_var}"; DB_USER[$env]="${!user_var:?defina $user_var}"
+    DB_NAME[$env]="${!name_var:-postgres}"; DB_PASSWORD[$env]="${!pass_var:?defina $pass_var}"
+    continue
+  fi
   if ! exists gcloud secrets describe "vigia-$env-db-password"; then
     echo
     echo "Banco de $env (Supabase › Project Settings › Database › Connection pooling › Session):"
-    read -rp "  host (ex.: aws-0-us-east-1.pooler.supabase.com): " "DB_HOST[$env]"
+    read -rp "  host (ex.: aws-0-sa-east-1.pooler.supabase.com): " "DB_HOST[$env]"
     read -rp "  usuário (ex.: postgres.abcdefghijkl): " "DB_USER[$env]"
     read -rp "  banco [postgres]: " "DB_NAME[$env]"
     DB_NAME[$env]="${DB_NAME[$env]:-postgres}"
@@ -67,7 +76,9 @@ cat >"$POLICY" <<'JSON'
   { "name": "apagar-o-resto", "action": { "type": "Delete" }, "condition": { "tagState": "any" } }
 ]
 JSON
-gcloud artifacts repositories set-cleanup-policies vigia --location "$REGION" --policy "$POLICY" --no-dry-run >/dev/null
+# No Git Bash do Windows, o gcloud precisa do caminho no formato do Windows.
+POLICY_PATH="$(cygpath -w "$POLICY" 2>/dev/null || echo "$POLICY")"
+gcloud artifacts repositories set-cleanup-policies vigia --location "$REGION" --policy "$POLICY_PATH" --no-dry-run >/dev/null
 rm -f "$POLICY"
 
 # ---------------------------------------------------------------- contas de serviço
