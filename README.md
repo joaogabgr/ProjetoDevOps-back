@@ -33,13 +33,14 @@ npm run dev            # API em modo watch
 
 ## Publicação
 
-O merge na `homolog` publica a API no Cloud Run de homologação, sem passo manual ([`deploy.yml`](.github/workflows/deploy.yml)):
+O merge na `homolog` publica a API na homologação e o merge na `main`, em produção, sem passo manual ([`deploy.yml`](.github/workflows/deploy.yml)):
 
 1. roda o CI inteiro de novo; o job `build` também testa a imagem Docker (migrations num banco limpo e `/api/health`);
 2. envia a imagem ao Artifact Registry;
-3. roda as migrations no Cloud Run Job `vigia-migrate-homolog`, com a mesma imagem;
-4. publica o serviço `vigia-api-homolog`;
-5. confere `GET /api/health`: precisa responder `db: ok` com a versão (SHA) publicada.
+3. roda as migrations no Cloud Run Job `vigia-migrate-<ambiente>`, com a mesma imagem;
+4. publica o serviço (`vigia-api-homolog` ou `vigia-api`);
+5. confere `GET /api/health`: precisa responder `db: ok` com a versão (SHA) publicada;
+6. na `main`, cria a release e a versão no Jira.
 
 `GET /api/health` responde 200 `{ "status": "ok", "db": "ok", "version": "<sha>" }`, ou 503 com o banco fora.
 
@@ -56,7 +57,7 @@ O fluxo completo está no [Processo do PO](https://projetodevops.atlassian.net/w
 - **Merge:**
   - feature → `develop`: *Squash and merge*;
   - `develop` → `homolog` → `main`: *Create a merge commit*.
-- **Release:** cada merge na `main` cria a release e a versão `back vX.Y.Z` no Jira.
+- **Release:** cada merge na `main` cria a release e a versão `back vX.Y.Z` no Jira, depois que a produção passa no teste de `/api/health`.
 
 | Tipo | Uso |
 |---|---|
