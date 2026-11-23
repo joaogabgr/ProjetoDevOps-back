@@ -34,7 +34,12 @@ export interface Container {
   readonly stationController: StationController;
   readonly typeParameterController: TypeParameterController;
   readonly userController: UserController;
+  /** Usado por /api/health: resolve se o banco responde, rejeita se não. */
+  readonly checkDatabase: () => Promise<void>;
 }
+
+/** Tempo máximo que /api/health espera o banco antes de dizer que ele está fora. */
+const DATABASE_CHECK_TIMEOUT_MS = 3000;
 
 /**
  * Composition root: o único lugar que conhece as implementações concretas.
@@ -78,5 +83,17 @@ export function buildContainer(dataSource: DataSource): Container {
     new GetCurrentUserUseCase(userRepository),
   );
 
-  return { tokenService, authController, stationController, typeParameterController, userController };
+  const checkDatabase = async (): Promise<void> => {
+    let timer: NodeJS.Timeout | undefined;
+    const timeout = new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => reject(new Error('Banco sem resposta.')), DATABASE_CHECK_TIMEOUT_MS);
+    });
+    try {
+      await Promise.race([dataSource.query('SELECT 1'), timeout]);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
+
+  return { tokenService, authController, stationController, typeParameterController, userController, checkDatabase };
 }

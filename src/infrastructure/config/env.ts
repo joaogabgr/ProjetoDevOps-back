@@ -17,10 +17,21 @@ const envSchema = z.object({
   DB_USER: z.string().min(1),
   DB_PASSWORD: z.string(),
   DB_NAME: z.string().min(1),
+  /**
+   * TLS na conexão com o banco. Sem a variável, fica ligado em produção (Supabase).
+   * `false` no Cloud SQL, que conecta pelo socket do Cloud Run.
+   */
+  DB_SSL: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((value) => (value === undefined ? undefined : value === 'true')),
   /** Segredo que assina o token da sessão. */
   JWT_SECRET: z.string().min(32, 'JWT_SECRET precisa de ao menos 32 caracteres.').default(DEV_JWT_SECRET),
   /** Validade da sessão em horas (RF9 R3). */
   SESSION_HOURS: z.coerce.number().positive().default(8),
+
+  /** Versão publicada (o deploy grava o SHA do commit); aparece em /api/health. */
+  APP_VERSION: z.string().min(1).default('dev'),
 
   DB_LOGGING: z
     .enum(['true', 'false'])
