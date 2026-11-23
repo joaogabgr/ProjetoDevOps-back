@@ -2,14 +2,16 @@ name: CI
 
 # Verificação de todo PR e de todo merge (RNF3). Os jobs titulo, typecheck, testes
 # e build são verificações obrigatórias nas branches develop, homolog e main.
+# No merge na homolog, quem roda este CI é o deploy.yml, antes de publicar.
 on:
   pull_request:
     branches: [develop, homolog, main]
   push:
-    branches: [develop, homolog, main]
+    branches: [develop, main]
+  workflow_call:
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -81,9 +83,25 @@ jobs:
           npm run migration:run
       - run: npm test
 
+  # Compila e testa a imagem que vai para o Cloud Run: as migrations rodam com ela
+  # num banco limpo e a API sobe respondendo /api/health com o banco ok.
   build:
     needs: testes
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ci -d ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -92,3 +110,20 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Imagem Docker
+        run: docker build -t vigia-api:ci .
+      - name: Migrations e /api/health dentro da imagem
+        run: |
+          CONFIG=(-e NODE_ENV=production -e DB_SSL=false -e DB_HOST=localhost -e DB_PORT=5432
+                  -e DB_USER=ci -e DB_PASSWORD=ci -e DB_NAME=ci -e APP_VERSION=ci
+                  -e JWT_SECRET=segredo-do-ci-com-mais-de-32-caracteres)
+          docker run --rm --network host "${CONFIG[@]}" vigia-api:ci \
+            node node_modules/typeorm/cli.js migration:run -d dist/infrastructure/database/data-source.js
+          docker run -d --name api --network host "${CONFIG[@]}" -e PORT=8080 vigia-api:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/api/health | grep -q '"db":"ok"'; then exit 0; fi
+            sleep 1
+          done
+          docker logs api
+          echo "::error::A imagem não respondeu /api/health com o banco ok em 30 s."
+          exit 1
