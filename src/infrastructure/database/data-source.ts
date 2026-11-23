@@ -22,5 +22,5 @@ export const AppDataSource = new DataSource({
   entities: schemas,
   migrations: [`${__dirname}/migrations/*.{ts,js}`],
   migrationsTableName: 'migrations',
-  ...(isProduction ? { ssl: { rejectUnauthorized: false } } : {}),
+  ...((env.DB_SSL ?? isProduction) ? { ssl: { rejectUnauthorized: false } } : {}),
 });
