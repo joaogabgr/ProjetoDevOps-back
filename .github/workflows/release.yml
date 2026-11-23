@@ -1,10 +1,9 @@
 name: Release
 
-# A cada promoção para a main: cria a tag e a release agrupada por requisito
-# e marca a versão nas issues do Jira.
+# A cada promoção para a main, chamado pelo deploy.yml depois que a produção passa no smoke:
+# cria a tag e a release agrupada por requisito e marca a versão nas issues do Jira.
 on:
-  push:
-    branches: [main]
+  workflow_call:
   workflow_dispatch:
 
 permissions:
